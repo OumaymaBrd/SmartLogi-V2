@@ -13,9 +13,13 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.Comparator;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 @Service
@@ -117,5 +121,19 @@ public class ColisDetailsService {
 
         return mapper.toDTOList(colisList);
     }
+
+    @Transactional(readOnly = true)
+    public Map<String, Long> getByIdClientExpediteur() {
+        return colisDeatilsRepository.findAll()
+                .stream()
+                .collect(Collectors.groupingBy(
+                        colis -> colis.getClientExpediteur().getId(),
+                        Collectors.counting()
+                ));
+    }
+
+
+
+
 
 }
