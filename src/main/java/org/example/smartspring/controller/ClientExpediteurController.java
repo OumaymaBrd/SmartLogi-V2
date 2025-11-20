@@ -10,11 +10,13 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
-@RequestMapping("/clients-expediteurs")
+@RequestMapping("/api/clients-expediteurs")
 @RequiredArgsConstructor
+@PreAuthorize("hasRole('CLIENT')")
 public class ClientExpediteurController {
 
     private final ClientExpediteurService clientExpediteurService;
@@ -24,7 +26,7 @@ public class ClientExpediteurController {
         return new ResponseEntity<>(clientExpediteurService.createClientExpediteur(dto), HttpStatus.CREATED);
     }
 
-    @GetMapping("/clients-expediteurs")
+    @GetMapping
     public ResponseEntity<Page<ClientExpediteurDTO>> getAllClientsExpediteurs(Pageable pageable) {
         Page<ClientExpediteurDTO> page = clientExpediteurService.getAllClientsExpediteurs(pageable);
 
@@ -34,7 +36,6 @@ public class ClientExpediteurController {
 
         return ResponseEntity.ok(page);
     }
-
 
     @GetMapping("/{id}")
     public ResponseEntity<ClientExpediteurDTO> getClientExpediteurById(@PathVariable String id) {
@@ -51,7 +52,7 @@ public class ClientExpediteurController {
         clientExpediteurService.deleteClientExpediteur(id);
 
         return ResponseEntity
-                .status(HttpStatus.NOT_FOUND)
+                .status(HttpStatus.OK)
                 .body("Suppression Avec Succes");
     }
 
