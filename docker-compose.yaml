@@ -85,11 +85,11 @@ services:
       retries: 10
 
   sonar-scanner:
-    image: sonarsource/sonar-scanner-cli:latest
+    image: maven:3.9.6-eclipse-temurin-17
     container_name: sonar_scanner
     depends_on:
       sonarqube:
-        condition: service_healthy
+        condition: service_started
     environment:
       - SONAR_HOST_URL=http://sonarqube:9000
       - SONAR_LOGIN=${SONAR_TOKEN}
@@ -98,54 +98,79 @@ services:
     volumes:
       - scanner-workspace:/workspace
     working_dir: /workspace
-    entrypoint: >
-      bash -c '
-      set -e
-      echo "=== Installation de Git et curl ==="
-      apk add --no-cache git curl jq
-      echo "=== Attente de SonarQube (verification API) ==="
-      until curl -s -u ${SONAR_TOKEN}: http://sonarqube:9000/api/system/status | grep -q "\"status\":\"UP\""; do
-        echo "En attente de SonarQube..."
-        sleep 5
-      done
-      echo "=== SonarQube est pret! ==="
-      echo "=== Verification/Creation du projet SmartLogi dans SonarQube ==="
-      PROJECT_EXISTS=$(curl -s -u ${SONAR_TOKEN}: "http://sonarqube:9000/api/projects/search?projects=SmartLogi" | jq -r ".components | length")
-      if [ "$PROJECT_EXISTS" -eq "0" ]; then
-        echo "Creation du projet SmartLogi..."
-        curl -s -u ${SONAR_TOKEN}: -X POST "http://sonarqube:9000/api/projects/create?project=SmartLogi&name=SmartLogi"
-        echo "Projet cree avec succes!"
-      else
-        echo "Le projet SmartLogi existe deja"
-      fi
-      echo "=== Clonage du projet SmartLogi depuis GitHub ==="
-      rm -rf smartlogi
-      if [ -n "${GITHUB_TOKEN}" ]; then
-        echo "Utilisation du token GitHub pour cloner le depot prive..."
-        git clone https://${GITHUB_TOKEN}@github.com/OumaymaBrd/SmartLogi.git smartlogi
-      else
-        echo "Clonage du depot public..."
-        git clone ${GITHUB_REPO} smartlogi
-      fi
-      cd smartlogi
-      echo "=== Contenu du projet clone: ==="
-      ls -la
-      echo "=== Demarrage de l analyse SonarQube ==="
-      sonar-scanner \
-        -Dsonar.projectKey=SmartLogi \
-        -Dsonar.projectName="SmartLogi - Gestion Logistique" \
-        -Dsonar.sources=. \
-        -Dsonar.exclusions="**/target/**,**/*.class,**/.git/**" \
-        -Dsonar.java.binaries=target/classes \
-        -Dsonar.sourceEncoding=UTF-8 \
-        -Dsonar.login=${SONAR_TOKEN} \
-        -X
-      echo "=========================================="
-      echo "=== Analyse SonarQube terminee avec succes! ==="
-      echo "=== Accedez a http://localhost:9000 ==="
-      echo "=== Votre projet SmartLogi avec statistiques est visible! ==="
-      echo "=========================================="
-      '
+    # CORRECTION FINALE: Utilisation de la notation liste YAML pour la fiabilite sur l OS
+    entrypoint:
+      - bash
+      - -c
+      - |
+        set -e
+        echo "=== Installation de Git, curl, jq et Sonar Scanner ==="
+        # Installation des outils de base dans l image Debian
+        apt-get update
+        apt-get install -y git curl jq unzip
+        
+        # Installation du sonar-scanner CLI (necessaire car nous n utilisons plus l image sonarsource)
+        SONAR_SCANNER_VERSION=5.0.1.3006
+        curl -sL https://binaries.sonarsource.com/Distribution/sonar-scanner-cli/sonar-scanner-cli-${SONAR_SCANNER_VERSION}.zip -o /tmp/sonar-scanner.zip
+        unzip -q /tmp/sonar-scanner.zip -d /opt
+        mv /opt/sonar-scanner-${SONAR_SCANNER_VERSION} /opt/sonar-scanner
+        export PATH=$PATH:/opt/sonar-scanner/bin
+        
+        echo "=== Attente de SonarQube (verification API) ==="
+        STATUS_UP="false"
+        while [ "$STATUS_UP" == "false" ]; do
+          if curl -s -u ${SONAR_LOGIN}: "http://sonarqube:9000/api/system/status" | grep -q "\"status\":\"UP\""; then
+            STATUS_UP="true"
+          else
+            echo "En attente de SonarQube..."
+            sleep 5
+          fi
+        done
+        
+        echo "=== SonarQube est pret! ==="
+        
+        echo "=== Verification/Creation du projet SmartLogi dans SonarQube ==="
+        PROJECT_EXISTS=$(curl -s -u ${SONAR_LOGIN}: "http://sonarqube:9000/api/projects/search?projects=SmartLogi" | jq -r ".components | length")
+        if [ "$PROJECT_EXISTS" -eq "0" ]; then
+          echo "Creation du projet SmartLogi..."
+          curl -s -u ${SONAR_LOGIN}: -X POST "http://sonarqube:9000/api/projects/create?project=SmartLogi&name=SmartLogi"
+          echo "Projet cree avec succes!"
+        else
+          echo "Le projet SmartLogi existe deja"
+        fi
+        
+        echo "=== Clonage du projet SmartLogi depuis GitHub ==="
+        rm -rf smartlogi
+        if [ -n "${GITHUB_TOKEN}" ]; then
+          echo "Utilisation du token GitHub pour cloner le depot prive..."
+          git clone https://${GITHUB_TOKEN}@github.com/OumaymaBrd/SmartLogi.git smartlogi
+        else
+          echo "Clonage du depot public..."
+          git clone ${GITHUB_REPO} smartlogi
+        fi
+        cd smartlogi
+        
+        echo "=== Construction et Exécution des Tests (génération de JaCoCo) ==="
+        #  Ajout de la phase de build Maven (essentielle pour compiler et generer jacoco.xml)
+        mvn clean install
+        
+        echo "=== Démarrage de l analyse SonarQube ==="
+        sonar-scanner \
+          -Dsonar.projectKey=SmartLogi \
+          -Dsonar.projectName="SmartLogi - Gestion Logistique" \
+          -Dsonar.sources=. \
+          -Dsonar.exclusions="**/target/**,**/*.class,**/.git/**" \
+          -Dsonar.java.binaries=target/classes \
+          -Dsonar.sourceEncoding=UTF-8 \
+          -Dsonar.login=${SONAR_LOGIN} \
+          -Dsonar.coverage.jacoco.xmlReportPaths=target/site/jacoco/jacoco.xml \
+          -X
+        
+        echo "=========================================="
+        echo "=== Analyse SonarQube terminee avec succes! ==="
+        echo "=== Accedez a http://localhost:9000 ==="
+        echo "=== Votre projet SmartLogi avec statistiques est visible! ==="
+        echo "=========================================="
     networks:
       - monitoring
     restart: "no"

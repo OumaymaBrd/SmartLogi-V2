@@ -2,7 +2,6 @@ package org.example.smartspring.service;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.example.smartspring.annotation.Loggable;
 import org.example.smartspring.dto.clientexpediteur.AddClientExpediteurDTO;
 import org.example.smartspring.dto.clientexpediteur.ClientExpediteurDTO;
 import org.example.smartspring.dto.clientexpediteur.UpdateClientExpediteurDTO;

@@ -4,7 +4,6 @@ import lombok.RequiredArgsConstructor;
 import org.example.smartspring.dto.colis.ColisDTO;
 import org.example.smartspring.dto.colis.UpdateColisDTO;
 import org.example.smartspring.dto.livreur.ConsulterColisAffecterDTO;
-import org.example.smartspring.dto.livreur.UpdateColisStatutDTO;
 import org.example.smartspring.entities.*;
 import org.example.smartspring.enums.PrioriteColis;
 import org.example.smartspring.enums.StatutColis;
