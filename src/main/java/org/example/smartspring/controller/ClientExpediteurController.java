@@ -14,7 +14,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
-@RequestMapping("/api/clients-expediteurs")
+@RequestMapping("/clients-expediteurs")
 @RequiredArgsConstructor
 @PreAuthorize("hasRole('CLIENT')")
 public class ClientExpediteurController {
@@ -27,11 +27,13 @@ public class ClientExpediteurController {
     }
 
     @GetMapping
-    public ResponseEntity<Page<ClientExpediteurDTO>> getAllClientsExpediteurs(Pageable pageable) {
+    public ResponseEntity<?> getAllClientsExpediteurs(Pageable pageable) {
         Page<ClientExpediteurDTO> page = clientExpediteurService.getAllClientsExpediteurs(pageable);
 
         if (page.isEmpty()) {
-            return ResponseEntity.noContent().build();
+            return ResponseEntity
+                    .status(HttpStatus.NOT_FOUND)
+                    .body("Aucune Client Trouvé");
         }
 
         return ResponseEntity.ok(page);

@@ -22,7 +22,7 @@ public class DataInitializer {
                 User admin = User.builder()
                         .username("admin")
                         .email("admin@smartlogi.com")
-                        .password(passwordEncoder.encode("admin123"))
+                        .password(passwordEncoder.encode("admin"))
                         .role(Role.ADMIN)
                         .isActive(true)
                         .build();
@@ -33,7 +33,7 @@ public class DataInitializer {
                 User manager = User.builder()
                         .username("manager")
                         .email("manager@smartlogi.com")
-                        .password(passwordEncoder.encode("manager123"))
+                        .password(passwordEncoder.encode("manager"))
                         .role(Role.MANAGER)
                         .isActive(true)
                         .build();
@@ -44,7 +44,7 @@ public class DataInitializer {
                 User livreur = User.builder()
                         .username("livreur")
                         .email("livreur@smartlogi.com")
-                        .password(passwordEncoder.encode("livreur123"))
+                        .password(passwordEncoder.encode("livreur"))
                         .role(Role.LIVREUR)
                         .isActive(true)
                         .build();
@@ -55,7 +55,7 @@ public class DataInitializer {
                 User client = User.builder()
                         .username("client")
                         .email("client@smartlogi.com")
-                        .password(passwordEncoder.encode("client123"))
+                        .password(passwordEncoder.encode("client"))
                         .role(Role.CLIENT)
                         .isActive(true)
                         .build();
@@ -64,9 +64,9 @@ public class DataInitializer {
 
                 // Créer un utilisateur USER par défaut
                 User user = User.builder()
-                        .username("user")
-                        .email("user@smartlogi.com")
-                        .password(passwordEncoder.encode("user123"))
+                        .username("client")
+                        .email("client@smartlogi.com")
+                        .password(passwordEncoder.encode("client"))
                         .role(Role.USER)
                         .isActive(true)
                         .build();
