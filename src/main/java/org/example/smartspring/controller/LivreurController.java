@@ -15,6 +15,8 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -31,10 +33,12 @@ public class LivreurController {
     private final ColisMapper mapper;
 
     @GetMapping("/colis/{id}")
+    @PreAuthorize("hasRole('LIVREUR')")
     public ResponseEntity<?> getColisAffectes(
             @PathVariable String id,
-            @RequestParam(required = false) StatutColis statut) {
-
+            @RequestParam(required = false) StatutColis statut,
+            Authentication authentication
+    ) {
         List<ConsulterColisAffecterDTO> liste = service.getColisByLivreurIdAndStatut(id, statut);
 
         if (liste.isEmpty()) {
@@ -46,10 +50,13 @@ public class LivreurController {
         return ResponseEntity.ok(liste);
     }
 
-
     @PutMapping("/updateStatutColis/{colisId}")
-    public ResponseEntity<String> updateColis(@PathVariable String colisId,
-                                              @RequestBody UpdateColisDTO dto) {
+    @PreAuthorize("hasRole('LIVREUR')")
+    public ResponseEntity<String> updateColis(
+            @PathVariable String colisId,
+            @RequestBody UpdateColisDTO dto,
+            Authentication authentication
+    ) {
         Colis updatedColis = service.updateColis(dto, colisId);
 
         String message = "Le colis " + colisId + " a été mis à jour avec succès";
@@ -68,5 +75,4 @@ public class LivreurController {
 
         return ResponseEntity.status(HttpStatus.OK).body(message);
     }
-
 }

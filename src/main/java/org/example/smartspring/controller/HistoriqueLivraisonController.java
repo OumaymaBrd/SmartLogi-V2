@@ -6,6 +6,8 @@ import org.example.smartspring.entities.HistoriqueLivraison;
 import org.example.smartspring.service.HistoriqueLivraisonService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Map;
@@ -18,9 +20,12 @@ public class HistoriqueLivraisonController {
     private final HistoriqueLivraisonService service;
 
     @PutMapping("/colis/{colisId}/commentaire")
-    public ResponseEntity<?> updateCommentaire(@PathVariable String colisId,
-                                               @RequestBody Map<String, String> body) {
-
+    @PreAuthorize("hasAnyRole('CLIENT', 'LIVREUR', 'MANAGER')")
+    public ResponseEntity<?> updateCommentaire(
+            @PathVariable String colisId,
+            @RequestBody Map<String, String> body,
+            Authentication authentication
+    ) {
         String commentaire = body.get("commentaire");
 
         HistoriqueLivraison updated = service.updateDernierCommentaire(colisId, commentaire);
@@ -30,4 +35,3 @@ public class HistoriqueLivraisonController {
                 .body("Merci Pour Votre Commentaire");
     }
 }
-

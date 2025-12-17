@@ -11,6 +11,8 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import org.springframework.data.domain.Pageable;
@@ -25,7 +27,9 @@ import java.util.List;
 @RequiredArgsConstructor
 public class ColisDetailsController {
     private final ColisDetailsService service;
+
     @GetMapping
+    @PreAuthorize("hasRole('MANAGER')")
     public ResponseEntity<?> getAllColisDetails(
             @RequestParam(required = false) String id,
             @RequestParam(required = false) PrioriteColis prioriteColis,
@@ -34,7 +38,7 @@ public class ColisDetailsController {
             @RequestParam(required = false) String ville_destination,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "2") int size
-            ) {
+    ) {
         Pageable pageable = PageRequest.of(page, size);
         Page<ColisDetailsDTO> pageResult = service.getAll(
                 id,
@@ -51,16 +55,16 @@ public class ColisDetailsController {
         }
 
         return ResponseEntity.ok(pageResult);
-
     }
 
     @PutMapping("/livreur/{livreurId}/update-statut")
+    @PreAuthorize("hasRole('LIVREUR')")
     public ResponseEntity<List<ColisDetailsDTO>> updateStatutColisLivreur(
             @PathVariable String livreurId,
-            @RequestBody UpdateStatutLivreurColis updateDto) {
-
+            @RequestBody UpdateStatutLivreurColis updateDto,
+            Authentication authentication
+    ) {
         List<ColisDetailsDTO> updated = service.updateStatutColisLivreur(livreurId, updateDto);
         return ResponseEntity.ok(updated);
     }
-
 }

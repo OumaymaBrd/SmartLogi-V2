@@ -11,6 +11,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -27,7 +28,10 @@ public class ClientExpediteurController {
     }
 
     @GetMapping
-    public ResponseEntity<?> getAllClientsExpediteurs(Pageable pageable) {
+    public ResponseEntity<?> getAllClientsExpediteurs(
+            Pageable pageable,
+            Authentication authentication
+    ) {
         Page<ClientExpediteurDTO> page = clientExpediteurService.getAllClientsExpediteurs(pageable);
 
         if (page.isEmpty()) {
@@ -40,17 +44,27 @@ public class ClientExpediteurController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<ClientExpediteurDTO> getClientExpediteurById(@PathVariable String id) {
+    public ResponseEntity<ClientExpediteurDTO> getClientExpediteurById(
+            @PathVariable String id,
+            Authentication authentication
+    ) {
         return ResponseEntity.ok(clientExpediteurService.getClientExpediteurById(id));
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<ClientExpediteurDTO> updateClientExpediteur(@PathVariable String id, @Valid @RequestBody UpdateClientExpediteurDTO dto) {
+    public ResponseEntity<ClientExpediteurDTO> updateClientExpediteur(
+            @PathVariable String id,
+            @Valid @RequestBody UpdateClientExpediteurDTO dto,
+            Authentication authentication
+    ) {
         return ResponseEntity.ok(clientExpediteurService.updateClientExpediteur(id, dto));
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<?> deleteClientExpediteur(@PathVariable String id) {
+    public ResponseEntity<?> deleteClientExpediteur(
+            @PathVariable String id,
+            Authentication authentication
+    ) {
         clientExpediteurService.deleteClientExpediteur(id);
 
         return ResponseEntity
@@ -59,7 +73,11 @@ public class ClientExpediteurController {
     }
 
     @GetMapping("/search")
-    public ResponseEntity<Page<ClientExpediteurDTO>> searchClientsExpediteurs(@RequestParam String keyword, Pageable pageable) {
+    public ResponseEntity<Page<ClientExpediteurDTO>> searchClientsExpediteurs(
+            @RequestParam String keyword,
+            Pageable pageable,
+            Authentication authentication
+    ) {
         return ResponseEntity.ok(clientExpediteurService.searchClientsExpediteurs(keyword, pageable));
     }
 }

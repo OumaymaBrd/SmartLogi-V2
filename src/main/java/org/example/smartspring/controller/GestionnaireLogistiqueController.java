@@ -13,13 +13,16 @@ import org.example.smartspring.service.ColisService;
 import org.example.smartspring.service.GestionnaireLogistiqueService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
-@RestController @RequiredArgsConstructor
+@RestController
+@RequiredArgsConstructor
 @Slf4j
 @RequestMapping("/gestionnairelogistique")
+@PreAuthorize("hasRole('MANAGER')")
 public class GestionnaireLogistiqueController {
 
     private final GestionnaireLogistiqueService service;
@@ -40,8 +43,8 @@ public class GestionnaireLogistiqueController {
     public ResponseEntity<?> affecterLivreur(
             @RequestParam String numero_colis,
             @RequestParam String idGestionnaire,
-            @RequestParam(required = false, name = "livreur_id") String livreurId,           // correspond à livreur_id en BDD
-            @RequestParam(required = false, name = "livreur_id_livree") String livreurIdLivree // correspond à livreur_id_livree en BDD
+            @RequestParam(required = false, name = "livreur_id") String livreurId,
+            @RequestParam(required = false, name = "livreur_id_livree") String livreurIdLivree
     ) {
 
         if (livreurId == null && livreurIdLivree == null) {
@@ -76,8 +79,4 @@ public class GestionnaireLogistiqueController {
 
         return ResponseEntity.status(HttpStatus.OK).body(message);
     }
-
-
-
-
 }
