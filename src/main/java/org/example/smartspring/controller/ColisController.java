@@ -16,7 +16,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
-@RequestMapping("colis")
+@RequestMapping("/colis")
 @RequiredArgsConstructor
 public class ColisController {
 
@@ -51,6 +51,8 @@ public class ColisController {
 
         return new ResponseEntity<>(response, HttpStatus.CREATED);
     }
+
+
 
     @GetMapping("/{colisId}")
     @PreAuthorize("hasAnyRole('CLIENT', 'LIVREUR', 'MANAGER')")

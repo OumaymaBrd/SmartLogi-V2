@@ -17,7 +17,7 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 @RequestMapping("/clients-expediteurs")
 @RequiredArgsConstructor
-@PreAuthorize("hasRole('CLIENT')")
+@PreAuthorize("hasRole('ADMIN')")
 public class ClientExpediteurController {
 
     private final ClientExpediteurService clientExpediteurService;
