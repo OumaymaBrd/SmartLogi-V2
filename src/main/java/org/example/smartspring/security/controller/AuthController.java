@@ -1,21 +1,21 @@
 package org.example.smartspring.security.controller;
 
 import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
 import org.example.smartspring.security.dto.AuthResponse;
 import org.example.smartspring.security.dto.LoginRequest;
 import org.example.smartspring.security.dto.RegisterRequest;
-import org.example.smartspring.security.service.AuthService;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.example.smartspring.security.service.AuthServiceExtended;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/auth")
 @CrossOrigin(origins = "*")
+@RequiredArgsConstructor
 public class AuthController {
 
-    @Autowired
-    private AuthService authService;
+    private final AuthServiceExtended authService;
 
     @PostMapping("/register")
     public ResponseEntity<AuthResponse> register(@Valid @RequestBody RegisterRequest request) {

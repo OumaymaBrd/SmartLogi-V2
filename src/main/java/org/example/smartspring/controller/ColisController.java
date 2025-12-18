@@ -23,7 +23,7 @@ public class ColisController {
     private final ColisService colisService;
 
     @PostMapping("/nouveau")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAuthority('COLIS_CREATE')") // Autorise Admin et Manager
     public ResponseEntity<ColisCreationResponseDTO> creerColisPourNouveauClient(@RequestBody ColisDTO dto) {
         Colis colis = colisService.creerColisPourNouveauClient(dto);
 
@@ -36,11 +36,10 @@ public class ColisController {
     }
 
     @PostMapping("/existant/{clientId}")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAuthority('COLIS_CREATE')") // Autorise Admin et Manager
     public ResponseEntity<ColisCreationResponseDTO> creerColisPourClientExistant(
             @PathVariable String clientId,
-            @RequestBody ColisDTO dto,
-            Authentication authentication
+            @RequestBody ColisDTO dto
     ) {
         Colis colis = colisService.creerColisPourClientExistant(clientId, dto);
 
@@ -52,13 +51,11 @@ public class ColisController {
         return new ResponseEntity<>(response, HttpStatus.CREATED);
     }
 
-
-
     @GetMapping("/{colisId}")
-    @PreAuthorize("hasAnyRole('CLIENT', 'LIVREUR', 'MANAGER')")
+    // Un utilisateur peut lire s'il a l'une de ces 3 permissions granulaires
+    @PreAuthorize("hasAnyAuthority('COLIS_READ_ALL', 'COLIS_READ_OWN', 'COLIS_READ_ASSIGNED')")
     public ResponseEntity<Colis> getColisById(
-            @PathVariable String colisId,
-            Authentication authentication
+            @PathVariable String colisId
     ) {
         Colis colis = colisService.getColisById(colisId)
                 .orElseThrow(() -> new ResourceNotFoundException("Colis non trouvé avec l'ID: " + colisId));
@@ -66,39 +63,36 @@ public class ColisController {
     }
 
     @GetMapping
-    @PreAuthorize("hasRole('MANAGER')")
+    @PreAuthorize("hasAuthority('COLIS_READ_ALL')") // Réservé Admin / Manager
     public ResponseEntity<List<Colis>> getAllColis() {
         List<Colis> colisList = colisService.getAllColis();
         return ResponseEntity.ok(colisList);
     }
 
     @PutMapping("/{colisId}")
-    @PreAuthorize("hasRole('MANAGER')")
+    @PreAuthorize("hasAuthority('COLIS_UPDATE')")
     public ResponseEntity<?> updateColis(
             @PathVariable String colisId,
             @RequestBody ColisDTO dto
     ) {
-        Colis updatedColis = colisService.updateColis(colisId, dto);
-        return ResponseEntity
-                .status(HttpStatus.CREATED)
-                .body("Update Statut Avec Succes!");
+        colisService.updateColis(colisId, dto);
+        return ResponseEntity.ok("Colis mis à jour avec succès");
     }
 
     @DeleteMapping("/{colisId}")
-    @PreAuthorize("hasRole('MANAGER')")
+    @PreAuthorize("hasAuthority('COLIS_DELETE')") // Seul celui qui a le droit de suppression
     public ResponseEntity<Void> deleteColis(@PathVariable String colisId) {
         colisService.deleteColis(colisId);
         return ResponseEntity.noContent().build();
     }
 
     @PutMapping("/{colisId}/statut")
-    @PreAuthorize("hasAnyRole('MANAGER', 'LIVREUR')")
+    @PreAuthorize("hasAuthority('COLIS_UPDATE_STATUS')") // Partagé entre Manager et Livreur
     public ResponseEntity<String> updateStatut(
             @PathVariable String colisId,
-            @RequestParam StatutColis statut,
-            Authentication authentication
+            @RequestParam StatutColis statut
     ) {
-        Colis colis = colisService.modifierStatut(colisId, statut);
-        return ResponseEntity.ok("Statut mis à jour et e-mails envoyés à l'expéditeur et au destinataire.");
+        colisService.modifierStatut(colisId, statut);
+        return ResponseEntity.ok("Statut mis à jour avec succès.");
     }
 }

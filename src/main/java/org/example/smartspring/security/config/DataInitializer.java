@@ -25,7 +25,7 @@ public class DataInitializer {
                         .email("admin@smartlogi.com")
                         .password(passwordEncoder.encode("admin123"))
                         .role(Role.ADMIN)
-                        .isActive(true)
+//                        .isActive(true)
                         .build());
 
                 // 2. MANAGER
@@ -34,7 +34,7 @@ public class DataInitializer {
                         .email("manager@smartlogi.com")
                         .password(passwordEncoder.encode("manager123"))
                         .role(Role.MANAGER)
-                        .isActive(true)
+//                        .isActive(true)
                         .build());
 
                 // 3. LIVREUR
@@ -43,7 +43,7 @@ public class DataInitializer {
                         .email("livreur@smartlogi.com")
                         .password(passwordEncoder.encode("livreur123"))
                         .role(Role.LIVREUR)
-                        .isActive(true)
+//                        .isActive(true)
                         .build());
 
                 // 4. CLIENT
@@ -52,7 +52,7 @@ public class DataInitializer {
                         .email("client@smartlogi.com")
                         .password(passwordEncoder.encode("client123"))
                         .role(Role.CLIENT)
-                        .isActive(true)
+//                        .isActive(true)
                         .build());
 
                 // 5. USER (C'est ici qu'était l'erreur de doublon)
@@ -61,7 +61,7 @@ public class DataInitializer {
                         .email("user@smartlogi.com")
                         .password(passwordEncoder.encode("user123"))
                         .role(Role.USER)
-                        .isActive(true)
+//                        .isActive(true)
                         .build());
 
                 System.out.println("========================================");

@@ -11,12 +11,9 @@ import java.util.List;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class AuthResponse {
-    private String token;
+public class UserPermissionsDTO {
     private Long userId;
     private String username;
-    private String email;
     private String role;
     private List<String> permissions;
-    private String message;
 }
