@@ -5,9 +5,10 @@ import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
 import lombok.RequiredArgsConstructor;
-import org.example.smartspring.entities.Permission;
+import lombok.extern.slf4j.Slf4j;
 import org.example.smartspring.security.config.JwtConfig;
 import org.example.smartspring.security.entities.User;
+import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 
@@ -16,6 +17,7 @@ import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class JwtService {
@@ -23,14 +25,19 @@ public class JwtService {
 
     public String generateToken(User user) {
         Map<String, Object> extraClaims = new HashMap<>();
-        // On utilise getName() de l'entité Role
-        extraClaims.put("role", user.getRole() != null ? user.getRole().getName() : "USER");
-        extraClaims.put("userId", user.getId());
 
-        List<String> perms = user.getPermissions().stream()
-                .map(Permission::getName)
+        // Stocker les permissions comme une List
+        List<String> permissions = user.getAuthorities().stream()
+                .map(GrantedAuthority::getAuthority)
                 .collect(Collectors.toList());
-        extraClaims.put("permissions", perms);
+
+        extraClaims.put("permissions", permissions);
+        extraClaims.put("userId", user.getId());
+        extraClaims.put("username", user.getUsername());
+        extraClaims.put("email", user.getEmail());
+        extraClaims.put("role", user.getRole() != null ? user.getRole().getName() : "USER");
+
+        log.info("Token generated with {} permissions: {}", permissions.size(), permissions);
 
         return Jwts.builder()
                 .claims(extraClaims)
@@ -60,7 +67,6 @@ public class JwtService {
     }
 
     private Claims extractAllClaims(String token) {
-        // Syntaxe corrigée pour JJWT 0.12+
         return Jwts.parser()
                 .verifyWith(getSignInKey())
                 .build()

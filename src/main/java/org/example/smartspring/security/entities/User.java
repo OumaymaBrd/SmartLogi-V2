@@ -22,7 +22,7 @@ public class User implements UserDetails {
 
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "role_id")
-    private Role role; // Utilise la nouvelle entité Role
+    private Role role;
 
     @ManyToMany(fetch = FetchType.EAGER)
     @JoinTable(
@@ -31,19 +31,34 @@ public class User implements UserDetails {
             inverseJoinColumns = @JoinColumn(name = "permission_id")
     )
     @Builder.Default
-    private Set<Permission> permissions = new HashSet<>(); // Rétablit getPermissions()
+    private Set<Permission> permissions = new HashSet<>();
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
         Set<GrantedAuthority> authorities = new HashSet<>();
+
+        // 1. Ajouter le rôle (ex: ROLE_ADMIN)
         if (role != null) {
             authorities.add(new SimpleGrantedAuthority("ROLE_" + role.getName()));
-            role.getPermissions().forEach(p -> authorities.add(new SimpleGrantedAuthority(p.getName())));
+
+            // 2. Ajouter les permissions liées au rôle (Dynamique)
+            if (role.getPermissions() != null) {
+                role.getPermissions().forEach(p ->
+                        authorities.add(new SimpleGrantedAuthority(p.getName())));
+            }
         }
-        permissions.forEach(p -> authorities.add(new SimpleGrantedAuthority(p.getName())));
+
+        // 3. Ajouter les permissions directes de l'utilisateur
+        if (permissions != null) {
+            permissions.forEach(p ->
+                    authorities.add(new SimpleGrantedAuthority(p.getName())));
+        }
+
         return authorities;
     }
 
+    @Override public String getPassword() { return password; }
+    @Override public String getUsername() { return username; }
     @Override public boolean isAccountNonExpired() { return true; }
     @Override public boolean isAccountNonLocked() { return true; }
     @Override public boolean isCredentialsNonExpired() { return true; }
