@@ -1,22 +1,25 @@
-package org.example.smartspring.service;
+package org.example.smartspring.security.service;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.example.smartspring.dto.AssignPermissionRequest;
 import org.example.smartspring.dto.PermissionDTO;
 import org.example.smartspring.dto.RolePermissionDTO;
 import org.example.smartspring.entities.Permission;
-import org.example.smartspring.exception.ResourceNotFoundException;
 import org.example.smartspring.repository.PermissionRepository;
 import org.example.smartspring.security.entities.Role;
 import org.example.smartspring.security.repository.RoleRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class RolePermissionService {
 
     private final RoleRepository roleRepository;
@@ -25,57 +28,70 @@ public class RolePermissionService {
     @Transactional
     public RolePermissionDTO assignPermissionsToRole(String roleId, AssignPermissionRequest request) {
         Role role = roleRepository.findByIdWithPermissions(roleId)
-                .orElseThrow(() -> new ResourceNotFoundException("Rôle non trouvé avec l'ID: " + roleId));
+                .orElseThrow(() -> new RuntimeException("Rôle non trouvé"));
 
-        Set<Permission> permissions = request.getPermissionIds().stream()
-                .map(permId -> permissionRepository.findById(permId)
-                        .orElseThrow(() -> new ResourceNotFoundException("Permission non trouvée avec l'ID: " + permId)))
-                .collect(Collectors.toSet());
+        Set<Permission> permissions = new HashSet<>(
+                permissionRepository.findAllById(request.getPermissionIds())
+        );
 
-        // Clear and add all to ensure type compatibility
-        permissions.forEach(role.getPermissions()::add);
+        if (permissions.isEmpty()) {
+            throw new RuntimeException("Aucune permission valide trouvée");
+        }
 
-        Role updated = roleRepository.save(role);
+        // Ajouter les nouvelles permissions (sans écraser les anciennes)
+        role.getPermissions().addAll(permissions);
+        Role savedRole = roleRepository.save(role);
 
-        return mapToRolePermissionDTO(updated);
+        log.info("Assigned {} permissions to role {}, total: {}",
+                permissions.size(),
+                role.getName(),
+                savedRole.getPermissions().size());
+
+        return mapToDTO(savedRole);
     }
 
     @Transactional
     public RolePermissionDTO removePermissionFromRole(String roleId, String permissionId) {
         Role role = roleRepository.findByIdWithPermissions(roleId)
-                .orElseThrow(() -> new ResourceNotFoundException("Rôle non trouvé avec l'ID: " + roleId));
+                .orElseThrow(() -> new RuntimeException("Rôle non trouvé"));
 
         Permission permission = permissionRepository.findById(permissionId)
-                .orElseThrow(() -> new ResourceNotFoundException("Permission non trouvée avec l'ID: " + permissionId));
+                .orElseThrow(() -> new RuntimeException("Permission non trouvée"));
 
         role.getPermissions().remove(permission);
-        Role updated = roleRepository.save(role);
+        Role savedRole = roleRepository.save(role);
 
-        return mapToRolePermissionDTO(updated);
+        log.info("Removed permission {} from role {}, remaining: {}",
+                permission.getName(),
+                role.getName(),
+                savedRole.getPermissions().size());
+
+        return mapToDTO(savedRole);
     }
 
+    @Transactional(readOnly = true)
     public RolePermissionDTO getRoleWithPermissions(String roleId) {
         Role role = roleRepository.findByIdWithPermissions(roleId)
-                .orElseThrow(() -> new ResourceNotFoundException("Rôle non trouvé avec l'ID: " + roleId));
-        return mapToRolePermissionDTO(role);
+                .orElseThrow(() -> new RuntimeException("Rôle non trouvé"));
+        return mapToDTO(role);
     }
 
-    private RolePermissionDTO mapToRolePermissionDTO(Role role) {
-        Set<PermissionDTO> permissionDTOs = role.getPermissions().stream()
-                .map(perm -> PermissionDTO.builder()
-                        .id(perm.getId())
-                        .name(perm.getName())
-                        .description(perm.getDescription())
-                        .category(perm.getCategory())
-                        .createdAt(perm.getCreatedAt())
+    private RolePermissionDTO mapToDTO(Role role) {
+        List<PermissionDTO> permissionDTOs = role.getPermissions().stream()
+                .map(p -> PermissionDTO.builder()
+                        .id(p.getId())
+                        .name(p.getName())
+                        .description(p.getDescription())
+                        .category(p.getCategory())
                         .build())
-                .collect(Collectors.toSet());
+                .collect(Collectors.toList());
 
         return RolePermissionDTO.builder()
                 .roleId(role.getId())
                 .roleName(role.getName())
                 .roleDescription(role.getDescription())
                 .permissions(permissionDTOs)
+                .totalPermissions(permissionDTOs.size())
                 .build();
     }
 }

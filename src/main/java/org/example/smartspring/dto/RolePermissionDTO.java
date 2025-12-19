@@ -5,16 +5,14 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.util.List;
 import java.util.Set;
 
-@Data
-@NoArgsConstructor
-@AllArgsConstructor
-@Builder
+@Data @Builder @NoArgsConstructor @AllArgsConstructor
 public class RolePermissionDTO {
-
     private String roleId;
     private String roleName;
     private String roleDescription;
-    private Set<PermissionDTO> permissions;
+    private List<PermissionDTO> permissions;
+    private int totalPermissions;
 }

@@ -8,7 +8,7 @@ import org.example.smartspring.dto.CreatePermissionRequest;
 import org.example.smartspring.dto.PermissionDTO;
 import org.example.smartspring.dto.RolePermissionDTO;
 import org.example.smartspring.service.PermissionService;
-import org.example.smartspring.service.RolePermissionService;
+import org.example.smartspring.security.service.RolePermissionService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
