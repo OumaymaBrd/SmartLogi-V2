@@ -109,6 +109,10 @@ public class PermissionInitializer implements CommandLineRunner {
         if (!userRepository.existsByUsername("manager")) {
             createAccount("manager", "manager@smartlogi.com", "manager123", "MANAGER");
         }
+
+        if (!userRepository.existsByUsername("client")) {
+            createAccount("client", "client@smartlogi.com", "client123", "CLIENT");
+        }
     }
 
     private void createAccount(String username, String email, String password, String roleName) {
