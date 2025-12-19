@@ -37,18 +37,17 @@ public class User implements UserDetails {
     public Collection<? extends GrantedAuthority> getAuthorities() {
         Set<GrantedAuthority> authorities = new HashSet<>();
 
-        // 1. Ajouter le rôle (ex: ROLE_ADMIN)
         if (role != null) {
             authorities.add(new SimpleGrantedAuthority("ROLE_" + role.getName()));
 
-            // 2. Ajouter les permissions liées au rôle (Dynamique)
+            // C'est ici que les permissions du rôle sont récupérées
             if (role.getPermissions() != null) {
                 role.getPermissions().forEach(p ->
                         authorities.add(new SimpleGrantedAuthority(p.getName())));
             }
         }
 
-        // 3. Ajouter les permissions directes de l'utilisateur
+        // Permissions directes sur l'utilisateur
         if (permissions != null) {
             permissions.forEach(p ->
                     authorities.add(new SimpleGrantedAuthority(p.getName())));

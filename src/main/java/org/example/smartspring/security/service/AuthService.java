@@ -1,71 +1,63 @@
 package org.example.smartspring.security.service;
 
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.PersistenceContext;
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 import org.example.smartspring.security.dto.*;
 import org.example.smartspring.security.entities.User;
-import org.example.smartspring.security.entities.Role;
 import org.example.smartspring.security.repository.UserRepository;
-import org.example.smartspring.security.repository.RoleRepository;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.core.GrantedAuthority;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
 import java.util.List;
 import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
-@Slf4j
 public class AuthService {
     private final UserRepository userRepository;
-    private final RoleRepository roleRepository;
-    private final PasswordEncoder passwordEncoder;
     private final JwtService jwtService;
     private final AuthenticationManager authenticationManager;
 
+    @PersistenceContext
+    private EntityManager entityManager;
+
     @Transactional
-    public AuthResponse register(RegisterRequest request) {
-        Role userRole = roleRepository.findByName(request.getRole() != null ? request.getRole().toString() : "USER")
-                .orElseThrow(() -> new RuntimeException("Rôle non trouvé"));
+    public AuthResponse refreshToken(String username) {
+        // 1. Vider le cache pour ignorer les anciennes données en mémoire
+        entityManager.clear();
 
-        User user = User.builder()
-                .username(request.getUsername())
-                .email(request.getEmail())
-                .password(passwordEncoder.encode(request.getPassword()))
-                .role(userRole)
-                .build();
+        // 2. Recharger l'utilisateur (Hibernate fera un SELECT frais sur les rôles et permissions)
+        User user = userRepository.findByUsername(username)
+                .orElseThrow(() -> new RuntimeException("Utilisateur non trouvé"));
 
-        userRepository.save(user);
-        return mapToResponse(user, "Inscription réussie");
+        // 3. Forcer le chargement de la collection
+        if (user.getRole() != null) {
+            user.getRole().getPermissions().size();
+        }
+
+        return mapToResponse(user, "Permissions rafraîchies avec succès");
     }
 
-    @Transactional(readOnly = true)
+    @Transactional
     public AuthResponse login(LoginRequest request) {
         authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(request.getUsername(), request.getPassword())
         );
-
-        // Recharger l'utilisateur avec TOUTES les permissions à jour depuis la DB
-        User user = userRepository.findByUsernameWithPermissions(request.getUsername())
-                .orElseThrow(() -> new RuntimeException("Utilisateur non trouvé"));
-
-        log.info("User {} logged in with {} authorities",
-                user.getUsername(),
-                user.getAuthorities().size());
-
+        entityManager.clear();
+        User user = userRepository.findByUsername(request.getUsername()).orElseThrow();
         return mapToResponse(user, "Connexion réussie");
     }
 
     private AuthResponse mapToResponse(User user, String message) {
         String jwtToken = jwtService.generateToken(user);
         List<String> perms = user.getAuthorities().stream()
-                .map(auth -> auth.getAuthority())
+                .map(GrantedAuthority::getAuthority)
                 .filter(auth -> !auth.startsWith("ROLE_"))
                 .collect(Collectors.toList());
-
-        log.info("Token generated with {} permissions for user {}", perms.size(), user.getUsername());
 
         return AuthResponse.builder()
                 .token(jwtToken)
