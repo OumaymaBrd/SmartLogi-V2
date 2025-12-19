@@ -52,7 +52,6 @@ public class ColisController {
     }
 
     @GetMapping("/{colisId}")
-    // Un utilisateur peut lire s'il a l'une de ces 3 permissions granulaires
     @PreAuthorize("hasAnyAuthority('COLIS_READ_ALL', 'COLIS_READ_OWN', 'COLIS_READ_ASSIGNED')")
     public ResponseEntity<Colis> getColisById(
             @PathVariable String colisId
@@ -80,7 +79,7 @@ public class ColisController {
     }
 
     @DeleteMapping("/{colisId}")
-    @PreAuthorize("hasAuthority('COLIS_DELETE')") // Seul celui qui a le droit de suppression
+    @PreAuthorize("hasAuthority('COLIS_DELETE')")
     public ResponseEntity<Void> deleteColis(@PathVariable String colisId) {
         colisService.deleteColis(colisId);
         return ResponseEntity.noContent().build();

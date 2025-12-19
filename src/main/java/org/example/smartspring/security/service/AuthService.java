@@ -1,85 +1,61 @@
 package org.example.smartspring.security.service;
 
-import org.example.smartspring.security.dto.AuthResponse;
-import org.example.smartspring.security.dto.LoginRequest;
-import org.example.smartspring.security.dto.RegisterRequest;
-import org.example.smartspring.entities.Permission;
+import lombok.RequiredArgsConstructor;
+import org.example.smartspring.security.dto.*;
 import org.example.smartspring.security.entities.User;
-import org.example.smartspring.security.enums.Role;
+import org.example.smartspring.security.entities.Role;
 import org.example.smartspring.security.repository.UserRepository;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.example.smartspring.security.repository.RoleRepository;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
-
+import org.springframework.transaction.annotation.Transactional;
 import java.util.List;
 import java.util.stream.Collectors;
 
 @Service
+@RequiredArgsConstructor
 public class AuthService {
+    private final UserRepository userRepository;
+    private final RoleRepository roleRepository;
+    private final PasswordEncoder passwordEncoder;
+    private final JwtService jwtService;
+    private final AuthenticationManager authenticationManager;
 
-    @Autowired
-    private UserRepository userRepository;
-
-    @Autowired
-    private PasswordEncoder passwordEncoder;
-    @Autowired
-    private JwtService jwtService;
-
-    @Autowired
-    private AuthenticationManager authenticationManager;
-
+    @Transactional
     public AuthResponse register(RegisterRequest request) {
-        if (userRepository.existsByUsername(request.getUsername())) {
-            throw new RuntimeException("Le nom d'utilisateur existe déjà");
-        }
-
-        if (userRepository.existsByEmail(request.getEmail())) {
-            throw new RuntimeException("L'email existe déjà");
-        }
+        // On récupère l'entité Role depuis la base
+        Role userRole = roleRepository.findByName(request.getRole() != null ? request.getRole().toString() : "USER")
+                .orElseThrow(() -> new RuntimeException("Rôle non trouvé"));
 
         User user = User.builder()
                 .username(request.getUsername())
                 .email(request.getEmail())
                 .password(passwordEncoder.encode(request.getPassword()))
-                .role(request.getRole() != null ? request.getRole() : Role.USER)
+                .role(userRole) // Assigne l'objet Role persistant
                 .build();
 
-        User savedUser = userRepository.save(user);
-
-        String jwtToken = jwtService.generateToken(savedUser);
-
-        List<String> permissions = savedUser.getPermissions().stream()
-                .map(Permission::getName)
-                .collect(Collectors.toList());
-
-        return AuthResponse.builder()
-                .token(jwtToken)
-                .userId(savedUser.getId())
-                .username(savedUser.getUsername())
-                .email(savedUser.getEmail())
-                .role(savedUser.getRole().name())
-                .permissions(permissions)
-                .message("Inscription réussie")
-                .build();
+        userRepository.save(user);
+        return mapToResponse(user, "Inscription réussie");
     }
 
     public AuthResponse login(LoginRequest request) {
         authenticationManager.authenticate(
-                new UsernamePasswordAuthenticationToken(
-                        request.getUsername(),
-                        request.getPassword()
-                )
+                new UsernamePasswordAuthenticationToken(request.getUsername(), request.getPassword())
         );
 
         User user = userRepository.findByUsername(request.getUsername())
                 .orElseThrow(() -> new RuntimeException("Utilisateur non trouvé"));
 
-        String jwtToken = jwtService.generateToken(user);
+        return mapToResponse(user, "Connexion réussie");
+    }
 
-        List<String> permissions = user.getPermissions().stream()
-                .map(Permission::getName)
+    private AuthResponse mapToResponse(User user, String message) {
+        String jwtToken = jwtService.generateToken(user);
+        List<String> perms = user.getAuthorities().stream()
+                .map(auth -> auth.getAuthority())
+                .filter(auth -> !auth.startsWith("ROLE_"))
                 .collect(Collectors.toList());
 
         return AuthResponse.builder()
@@ -87,9 +63,9 @@ public class AuthService {
                 .userId(user.getId())
                 .username(user.getUsername())
                 .email(user.getEmail())
-                .role(user.getRole().name())
-                .permissions(permissions)
-                .message("Connexion réussie")
+                .role(user.getRole() != null ? user.getRole().getName() : "USER") // Utilise getName()
+                .permissions(perms)
+                .message(message)
                 .build();
     }
 }

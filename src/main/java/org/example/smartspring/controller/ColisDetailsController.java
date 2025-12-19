@@ -29,7 +29,7 @@ public class ColisDetailsController {
     private final ColisDetailsService service;
 
     @GetMapping
-    @PreAuthorize("hasRole('MANAGER')")
+    @PreAuthorize("hasAuthority('COLIS_READ_ALL')")
     public ResponseEntity<?> getAllColisDetails(
             @RequestParam(required = false) String id,
             @RequestParam(required = false) PrioriteColis prioriteColis,
@@ -58,7 +58,7 @@ public class ColisDetailsController {
     }
 
     @PutMapping("/livreur/{livreurId}/update-statut")
-    @PreAuthorize("hasRole('LIVREUR')")
+    @PreAuthorize("hasAuthority('COLIS_UPDATE_STATUS')")
     public ResponseEntity<List<ColisDetailsDTO>> updateStatutColisLivreur(
             @PathVariable String livreurId,
             @RequestBody UpdateStatutLivreurColis updateDto,

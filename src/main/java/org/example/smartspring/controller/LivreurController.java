@@ -9,19 +9,12 @@ import org.example.smartspring.enums.StatutColis;
 import org.example.smartspring.mapper.ColisMapper;
 import org.example.smartspring.repository.ColisRepository;
 import org.example.smartspring.service.ColisService;
-import org.example.smartspring.service.EmailService;
-import org.example.smartspring.service.LivreurService;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
-import java.util.Map;
-import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/livreurs")
@@ -29,15 +22,12 @@ import java.util.stream.Collectors;
 public class LivreurController {
 
     private final ColisService service;
-    private final ColisRepository repository;
-    private final ColisMapper mapper;
 
     @GetMapping("/colis/{id}")
-    @PreAuthorize("hasRole('LIVREUR')")
+    @PreAuthorize("hasAuthority('COLIS_READ_ASSIGNED')")
     public ResponseEntity<?> getColisAffectes(
             @PathVariable String id,
-            @RequestParam(required = false) StatutColis statut,
-            Authentication authentication
+            @RequestParam(required = false) StatutColis statut
     ) {
         List<ConsulterColisAffecterDTO> liste = service.getColisByLivreurIdAndStatut(id, statut);
 
@@ -51,28 +41,27 @@ public class LivreurController {
     }
 
     @PutMapping("/updateStatutColis/{colisId}")
-    @PreAuthorize("hasRole('LIVREUR')")
+    @PreAuthorize("hasAuthority('COLIS_UPDATE_STATUS')")
     public ResponseEntity<String> updateColis(
             @PathVariable String colisId,
-            @RequestBody UpdateColisDTO dto,
-            Authentication authentication
+            @RequestBody UpdateColisDTO dto
     ) {
         Colis updatedColis = service.updateColis(dto, colisId);
 
-        String message = "Le colis " + colisId + " a été mis à jour avec succès";
+        StringBuilder message = new StringBuilder("Le colis " + colisId + " a été mis à jour avec succès");
 
         if (dto.getStatut() != null) {
-            message += " | Statut : " + updatedColis.getStatut();
+            message.append(" | Statut : ").append(updatedColis.getStatut());
         }
 
         if (dto.getLivreurId() != null) {
-            message += " | Livreur collecteur affecté : " + dto.getLivreurId();
+            message.append(" | Livreur collecteur affecté : ").append(dto.getLivreurId());
         }
 
         if (dto.getLivreur_id_livree() != null) {
-            message += " | Livreur livré affecté : " + dto.getLivreur_id_livree();
+            message.append(" | Livreur livré affecté : ").append(dto.getLivreur_id_livree());
         }
 
-        return ResponseEntity.status(HttpStatus.OK).body(message);
+        return ResponseEntity.status(HttpStatus.OK).body(message.toString());
     }
 }

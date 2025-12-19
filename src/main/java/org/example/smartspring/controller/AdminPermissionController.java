@@ -24,7 +24,7 @@ public class AdminPermissionController {
     private final PermissionService permissionService;
     private final RolePermissionService rolePermissionService;
 
-    // Initialiser les permissions par défaut (à appeler une seule fois)
+
     @PostMapping("/initialize")
     @PreAuthorize("hasAuthority('ADMIN_MANAGE_PERMISSIONS')")
     public ResponseEntity<String> initializePermissions() {

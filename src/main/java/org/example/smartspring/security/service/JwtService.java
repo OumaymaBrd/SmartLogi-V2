@@ -12,26 +12,25 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 
 import javax.crypto.SecretKey;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
 public class JwtService {
-
     private final JwtConfig jwtConfig;
 
     public String generateToken(User user) {
         Map<String, Object> extraClaims = new HashMap<>();
-        extraClaims.put("role", user.getRole().name());
+        // On utilise getName() de l'entité Role
+        extraClaims.put("role", user.getRole() != null ? user.getRole().getName() : "USER");
         extraClaims.put("userId", user.getId());
 
-        extraClaims.put("permissions", user.getPermissions().stream()
+        List<String> perms = user.getPermissions().stream()
                 .map(Permission::getName)
-                .collect(Collectors.toList()));
+                .collect(Collectors.toList());
+        extraClaims.put("permissions", perms);
 
         return Jwts.builder()
                 .claims(extraClaims)
@@ -57,14 +56,11 @@ public class JwtService {
     }
 
     private boolean isTokenExpired(String token) {
-        return extractExpiration(token).before(new Date());
-    }
-
-    private Date extractExpiration(String token) {
-        return extractClaim(token, Claims::getExpiration);
+        return extractClaim(token, Claims::getExpiration).before(new Date());
     }
 
     private Claims extractAllClaims(String token) {
+        // Syntaxe corrigée pour JJWT 0.12+
         return Jwts.parser()
                 .verifyWith(getSignInKey())
                 .build()

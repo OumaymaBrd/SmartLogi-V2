@@ -3,8 +3,6 @@ package org.example.smartspring.controller;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.example.smartspring.dto.clientexpediteur.AddClientExpediteurDTO;
-import org.example.smartspring.dto.clientexpediteur.ClientExpediteurDTO;
 import org.example.smartspring.dto.colis.UpdateColisDTO;
 import org.example.smartspring.dto.gestionnairelogistique.AddGestionnaireLogistqueDTO;
 import org.example.smartspring.dto.gestionnairelogistique.GestionnaireLogistiqueDTO;
@@ -16,30 +14,28 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
-
 @RestController
 @RequiredArgsConstructor
 @Slf4j
 @RequestMapping("/gestionnairelogistique")
-@PreAuthorize("hasRole('MANAGER')")
 public class GestionnaireLogistiqueController {
 
     private final GestionnaireLogistiqueService service;
     private final ColisService colisService;
 
     @PostMapping
+    @PreAuthorize("hasAuthority('GESTIONNAIRE_CREATE')")
     public ResponseEntity<?> create(
             @Valid @RequestBody AddGestionnaireLogistqueDTO dto) {
 
-        GestionnaireLogistiqueDTO created = service.create(dto);
-
+        service.create(dto);
         return ResponseEntity
                 .status(HttpStatus.CREATED)
-                .body(" Creation Gestionnaire Logistique Avec Succes");
+                .body("Création Gestionnaire Logistique Avec Succès");
     }
 
     @PutMapping("/affecter-livreur")
+    @PreAuthorize("hasAuthority('LIVREUR_ASSIGN')")
     public ResponseEntity<?> affecterLivreur(
             @RequestParam String numero_colis,
             @RequestParam String idGestionnaire,
@@ -59,24 +55,25 @@ public class GestionnaireLogistiqueController {
     }
 
     @PutMapping("/updateStatutColis/{colisId}")
+    @PreAuthorize("hasAuthority('COLIS_UPDATE_STATUS')")
     public ResponseEntity<String> updateColis(@PathVariable String colisId,
                                               @RequestBody UpdateColisDTO dto) {
         Colis updatedColis = colisService.updateColis(dto, colisId);
 
-        String message = "Le colis " + colisId + " a été mis à jour avec succès";
+        StringBuilder message = new StringBuilder("Le colis " + colisId + " a été mis à jour avec succès");
 
         if (dto.getStatut() != null) {
-            message += " | Statut : " + updatedColis.getStatut();
+            message.append(" | Statut : ").append(updatedColis.getStatut());
         }
 
         if (dto.getLivreurId() != null) {
-            message += " | Livreur collecteur affecté : " + dto.getLivreurId();
+            message.append(" | Livreur collecteur affecté : ").append(dto.getLivreurId());
         }
 
         if (dto.getLivreur_id_livree() != null) {
-            message += " | Livreur livré affecté : " + dto.getLivreur_id_livree();
+            message.append(" | Livreur livré affecté : ").append(dto.getLivreur_id_livree());
         }
 
-        return ResponseEntity.status(HttpStatus.OK).body(message);
+        return ResponseEntity.status(HttpStatus.OK).body(message.toString());
     }
 }
