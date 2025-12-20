@@ -27,19 +27,31 @@ public class AuthService {
 
     @Transactional
     public AuthResponse refreshToken(String username) {
-        // 1. Vider le cache pour ignorer les anciennes données en mémoire
-        entityManager.clear();
+        // 1. Synchroniser les changements en attente avec la BDD
+        entityManager.flush();
 
-        // 2. Recharger l'utilisateur (Hibernate fera un SELECT frais sur les rôles et permissions)
+        // 2. Récupérer l'utilisateur actuel (potentiellement depuis le cache)
         User user = userRepository.findByUsername(username)
                 .orElseThrow(() -> new RuntimeException("Utilisateur non trouvé"));
 
-        // 3. Forcer le chargement de la collection
+        // 3. ÉVICTION DU CACHE (Crucial pour voir les suppressions)
+        // On détache l'objet Role et User pour forcer un SELECT physique lors du rechargement
         if (user.getRole() != null) {
-            user.getRole().getPermissions().size();
+            entityManager.detach(user.getRole());
+        }
+        entityManager.detach(user);
+
+        // 4. RECHARGEMENT PROPRE
+        // Hibernate est maintenant obligé de refaire les requêtes JOIN sur les permissions
+        User freshUser = userRepository.findByUsername(username)
+                .orElseThrow(() -> new RuntimeException("Erreur de synchronisation"));
+
+        // Initialisation de la collection pour éviter LazyInitializationException
+        if (freshUser.getRole() != null) {
+            freshUser.getRole().getPermissions().size();
         }
 
-        return mapToResponse(user, "Permissions rafraîchies avec succès");
+        return mapToResponse(freshUser, "Permissions synchronisées avec succès");
     }
 
     @Transactional
@@ -47,13 +59,20 @@ public class AuthService {
         authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(request.getUsername(), request.getPassword())
         );
+
+        // Nettoyage global du cache avant le login
         entityManager.clear();
-        User user = userRepository.findByUsername(request.getUsername()).orElseThrow();
+
+        User user = userRepository.findByUsername(request.getUsername())
+                .orElseThrow(() -> new RuntimeException("Utilisateur non trouvé"));
+
         return mapToResponse(user, "Connexion réussie");
     }
 
     private AuthResponse mapToResponse(User user, String message) {
+        // Le JwtService utilisera freshUser.getAuthorities() avec les données réelles
         String jwtToken = jwtService.generateToken(user);
+
         List<String> perms = user.getAuthorities().stream()
                 .map(GrantedAuthority::getAuthority)
                 .filter(auth -> !auth.startsWith("ROLE_"))

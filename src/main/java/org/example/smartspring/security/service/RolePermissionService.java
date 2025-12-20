@@ -5,13 +5,12 @@ import jakarta.persistence.PersistenceContext;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.example.smartspring.dto.AssignPermissionRequest;
-import org.example.smartspring.dto.PermissionDTO;
 import org.example.smartspring.dto.RolePermissionDTO;
+import org.example.smartspring.dto.PermissionDTO;
 import org.example.smartspring.entities.Permission;
 import org.example.smartspring.repository.PermissionRepository;
 import org.example.smartspring.security.entities.Role;
 import org.example.smartspring.security.repository.RoleRepository;
-import org.springframework.cache.CacheManager;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -36,26 +35,15 @@ public class RolePermissionService {
         Role role = roleRepository.findByIdWithPermissions(roleId)
                 .orElseThrow(() -> new RuntimeException("Rôle non trouvé"));
 
-        Set<Permission> permissions = new HashSet<>(
-                permissionRepository.findAllById(request.getPermissionIds())
-        );
-
-        if (permissions.isEmpty()) {
-            throw new RuntimeException("Aucune permission valide trouvée");
-        }
+        Set<Permission> permissions = new HashSet<>(permissionRepository.findAllById(request.getPermissionIds()));
 
         role.getPermissions().addAll(permissions);
-        Role savedRole = roleRepository.save(role);
 
-        entityManager.flush();
+        // saveAndFlush écrit immédiatement le nouvel état dans role_permissions
+        roleRepository.saveAndFlush(role);
+
         entityManager.clear();
-
-        log.info("✅ Assigned {} permissions to role {}, total: {} - Cache cleared!",
-                permissions.size(),
-                role.getName(),
-                savedRole.getPermissions().size());
-
-        return mapToDTO(savedRole);
+        return getRoleWithPermissions(roleId);
     }
 
     @Transactional
@@ -63,21 +51,25 @@ public class RolePermissionService {
         Role role = roleRepository.findByIdWithPermissions(roleId)
                 .orElseThrow(() -> new RuntimeException("Rôle non trouvé"));
 
-        Permission permission = permissionRepository.findById(permissionId)
-                .orElseThrow(() -> new RuntimeException("Permission non trouvée"));
+        // Utilisation de removeIf pour garantir la suppression dans le Set par ID
+        boolean removed = role.getPermissions().removeIf(p -> p.getId().equals(permissionId));
 
-        role.getPermissions().remove(permission);
-        Role savedRole = roleRepository.save(role);
+        if (!removed) {
+            log.warn("Permission non trouvée dans ce rôle : {}", permissionId);
+        }
 
+        // Force la suppression physique en base de données
+        roleRepository.saveAndFlush(role);
+
+        // On vide la session pour que le prochain appel (ou le refresh token) relise MySQL
         entityManager.flush();
         entityManager.clear();
 
-        log.info("✅ Removed permission {} from role {}, remaining: {} - Cache cleared!",
-                permission.getName(),
-                role.getName(),
-                savedRole.getPermissions().size());
+        log.info("✅ Relation supprimée en base de données pour le rôle {}", role.getName());
 
-        return mapToDTO(savedRole);
+        // On recharge une version propre pour le retour DTO
+        Role updatedRole = roleRepository.findByIdWithPermissions(roleId).orElseThrow();
+        return mapToDTO(updatedRole);
     }
 
     @Transactional(readOnly = true)
@@ -92,8 +84,8 @@ public class RolePermissionService {
                 .map(p -> PermissionDTO.builder()
                         .id(p.getId())
                         .name(p.getName())
-                        .description(p.getDescription())
                         .category(p.getCategory())
+                        .description(p.getDescription())
                         .build())
                 .collect(Collectors.toList());
 
