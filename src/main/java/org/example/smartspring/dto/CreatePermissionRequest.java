@@ -13,7 +13,7 @@ import lombok.NoArgsConstructor;
 public class CreatePermissionRequest {
 
     @NotBlank(message = "Le nom de la permission est requis")
-    private String name;
+    private String name; //
 
     private String description;
 
