@@ -28,7 +28,6 @@ public class UserPermissionService {
         return UserPermissionsDTO.builder()
                 .userId(user.getId())
                 .username(user.getUsername())
-                // FIX IMAGE 14 : On utilise .getName() car le champ est privé
                 .role(user.getRole() != null ? user.getRole().getName() : "NONE")
                 .permissions(permissionNames)
                 .build();
@@ -41,7 +40,7 @@ public class UserPermissionService {
         Permission perm = permissionRepository.findById(permissionId)
                 .orElseThrow(() -> new RuntimeException("Permission non trouvée"));
 
-        user.getPermissions().add(perm); // Fonctionne maintenant
+        user.getPermissions().add(perm);
         userRepository.save(user);
     }
 }

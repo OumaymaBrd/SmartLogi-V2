@@ -11,6 +11,6 @@ public class RolePermissionDTO {
     private String roleId;
     private String roleName;
     private String roleDescription;
-    private List<PermissionDTO> permissions; // Utilisation de List pour correspondre au collect(Collectors.toList())
+    private List<PermissionDTO> permissions;
     private int totalPermissions;
 }

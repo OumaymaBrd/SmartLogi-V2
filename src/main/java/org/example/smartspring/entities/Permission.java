@@ -17,7 +17,7 @@ public class Permission {
 
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
-    private String id; // Type String pour UUID
+    private String id;
 
     @Column(nullable = false, unique = true)
     private String name;

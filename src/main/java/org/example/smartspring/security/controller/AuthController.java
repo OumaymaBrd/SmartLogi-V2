@@ -63,7 +63,6 @@ public class AuthController {
 
     @PostMapping("/logout")
     public ResponseEntity<?> logout(HttpServletRequest request, HttpServletResponse response) {
-        // Libère le contexte de sécurité Spring
         SecurityContextLogoutHandler logoutHandler = new SecurityContextLogoutHandler();
         logoutHandler.logout(request, response, SecurityContextHolder.getContext().getAuthentication());
 

@@ -97,4 +97,16 @@ public class RolePermissionService {
                 .totalPermissions(permissionDTOs.size())
                 .build();
     }
+
+    @Transactional(readOnly = true)
+    public List<RolePermissionDTO> getAllRolesWithPermissions() {
+        log.info("Récupération de tous les rôles avec leurs permissions");
+        List<Role> roles = roleRepository.findAll();
+
+        return roles.stream()
+                .map(this::mapToDTO)
+                .collect(Collectors.toList());
+    }
+
+
 }

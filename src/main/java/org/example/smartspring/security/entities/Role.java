@@ -8,10 +8,7 @@ import java.util.Set;
 
 @Entity
 @Table(name = "roles")
-@Data // Génère getName() et setName() indispensables pour AuthService
-@Builder
-@NoArgsConstructor
-@AllArgsConstructor
+@Data @Builder @NoArgsConstructor @AllArgsConstructor
 public class Role {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)

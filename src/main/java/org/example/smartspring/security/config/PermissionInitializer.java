@@ -30,16 +30,12 @@ public class PermissionInitializer implements CommandLineRunner {
     @Override
     @Transactional
     public void run(String... args) {
-        // 1. Synchronisation du dictionnaire des permissions depuis l'Enum technique
         initializePermissions();
 
-        // 2. Configuration des rôles physiques et attribution des accès
         initializeRoles();
 
-        // 3. Création des comptes utilisateurs de test
         createDefaultUsers();
 
-        // 4. Maintenance de sécurité : l'Admin et le Manager reçoivent toutes les permissions
         syncGlobalPermissions();
     }
 
@@ -60,16 +56,10 @@ public class PermissionInitializer implements CommandLineRunner {
         System.out.println(">>> Étape 2 : Configuration des Rôles (Accès Total pour Manager)...");
         List<Permission> allPerms = permissionRepository.findAll();
 
-        // --- ROLE : ADMIN ---
-        // Accès illimité à l'ensemble du système
         createRoleWithPermissions("ADMIN", "Super Administrateur", allPerms);
-
-        // --- ROLE : MANAGER ---
-        // À votre demande : Accès total à TOUTES les permissions (Colis, Clients, Destinataires, etc.)
         createRoleWithPermissions("MANAGER", "Gestionnaire avec accès complet", allPerms);
 
-        // --- ROLE : LIVREUR ---
-        // Accès métier restreint : Lecture des affectations, mises à jour de statut et historique
+
         List<Permission> livreurPerms = allPerms.stream()
                 .filter(p -> p.getName().equals("COLIS_READ_ASSIGNED")
                         || p.getName().equals("COLIS_UPDATE_STATUS")
@@ -77,7 +67,6 @@ public class PermissionInitializer implements CommandLineRunner {
                 .collect(Collectors.toList());
         createRoleWithPermissions("LIVREUR", "Livreur de Terrain", livreurPerms);
 
-        // --- ROLE : CLIENT ---
         createRoleIfNotFound("CLIENT", "Client Expéditeur");
     }
 
@@ -85,7 +74,7 @@ public class PermissionInitializer implements CommandLineRunner {
         Role role = roleRepository.findByName(name).orElseGet(() ->
                 roleRepository.save(Role.builder().name(name).description(desc).build())
         );
-        // Mise à jour du set pour inclure les nouvelles permissions ajoutées
+
         role.setPermissions(new HashSet<>(perms));
         roleRepository.save(role);
         System.out.println("Rôle [" + name + "] mis à jour avec " + perms.size() + " permissions.");
@@ -100,12 +89,10 @@ public class PermissionInitializer implements CommandLineRunner {
     private void createDefaultUsers() {
         System.out.println(">>> Étape 3 : Initialisation des comptes utilisateurs...");
 
-        // Admin par défaut
         if (!userRepository.existsByUsername("admin")) {
             createAccount("admin", "admin@smartlogi.com", "admin123", "ADMIN");
         }
 
-        // Manager par défaut
         if (!userRepository.existsByUsername("manager")) {
             createAccount("manager", "manager@smartlogi.com", "manager123", "MANAGER");
         }
@@ -130,7 +117,6 @@ public class PermissionInitializer implements CommandLineRunner {
         List<Permission> allPermissions = permissionRepository.findAll();
         Set<Permission> permsSet = new HashSet<>(allPermissions);
 
-        // On s'assure que les utilisateurs ADMIN et MANAGER ont tout dans leur Set de permissions directes
         userRepository.findAll().forEach(user -> {
             String rName = user.getRole().getName();
             if ("ADMIN".equals(rName) || "MANAGER".equals(rName)) {

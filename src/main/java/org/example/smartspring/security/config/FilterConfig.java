@@ -11,8 +11,6 @@ public class FilterConfig {
     @Bean
     public FilterRegistrationBean<JwtAuthenticationFilter> registration(JwtAuthenticationFilter filter) {
         FilterRegistrationBean<JwtAuthenticationFilter> registration = new FilterRegistrationBean<>(filter);
-        // Désactive l'enregistrement automatique comme filtre Servlet standard
-        // Le filtre sera utilisé UNIQUEMENT par Spring Security
         registration.setEnabled(false);
         return registration;
     }

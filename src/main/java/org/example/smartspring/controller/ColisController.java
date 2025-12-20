@@ -23,7 +23,7 @@ public class ColisController {
     private final ColisService colisService;
 
     @PostMapping("/nouveau")
-    @PreAuthorize("hasAuthority('COLIS_CREATE')") // Autorise Admin et Manager
+    @PreAuthorize("hasAuthority('COLIS_CREATE')")
     public ResponseEntity<ColisCreationResponseDTO> creerColisPourNouveauClient(@RequestBody ColisDTO dto) {
         Colis colis = colisService.creerColisPourNouveauClient(dto);
 
@@ -36,7 +36,7 @@ public class ColisController {
     }
 
     @PostMapping("/existant/{clientId}")
-    @PreAuthorize("hasAuthority('COLIS_CREATE')") // Autorise Admin et Manager
+    @PreAuthorize("hasAuthority('COLIS_CREATE')")
     public ResponseEntity<ColisCreationResponseDTO> creerColisPourClientExistant(
             @PathVariable String clientId,
             @RequestBody ColisDTO dto
@@ -62,7 +62,7 @@ public class ColisController {
     }
 
     @GetMapping
-    @PreAuthorize("hasAuthority('COLIS_READ_ALL')") // Réservé Admin / Manager
+    @PreAuthorize("hasAuthority('COLIS_READ_ALL')")
     public ResponseEntity<List<Colis>> getAllColis() {
         List<Colis> colisList = colisService.getAllColis();
         return ResponseEntity.ok(colisList);
@@ -86,7 +86,7 @@ public class ColisController {
     }
 
     @PutMapping("/{colisId}/statut")
-    @PreAuthorize("hasAuthority('COLIS_UPDATE_STATUS')") // Partagé entre Manager et Livreur
+    @PreAuthorize("hasAuthority('COLIS_UPDATE_STATUS')")
     public ResponseEntity<String> updateStatut(
             @PathVariable String colisId,
             @RequestParam StatutColis statut

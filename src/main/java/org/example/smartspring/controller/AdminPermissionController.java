@@ -108,4 +108,14 @@ public class AdminPermissionController {
             log.warn("No authentication found in SecurityContext");
         }
     }
+
+    @GetMapping("/roles")
+    @PreAuthorize("hasAuthority('ADMIN_MANAGE_PERMISSIONS')")
+    public ResponseEntity<List<RolePermissionDTO>> getAllRoles() {
+        logAuthenticationDetails();
+        List<RolePermissionDTO> roles = rolePermissionService.getAllRolesWithPermissions();
+        return ResponseEntity.ok(roles);
+    }
+
+
 }

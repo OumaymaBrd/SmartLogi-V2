@@ -25,14 +25,13 @@ public class DataInitializer {
         return args -> {
             if (userRepository.count() == 0) {
 
-                // 1. Créer ou récupérer les ENTITÉS Role (indispensable pour la nouvelle DB)
+
                 Role adminRole = getOrCreateRole(roleRepository, "ADMIN", "Administrateur système");
                 Role managerRole = getOrCreateRole(roleRepository, "MANAGER", "Gestionnaire logistique");
                 Role livreurRole = getOrCreateRole(roleRepository, "LIVREUR", "Livreur de colis");
                 Role clientRole = getOrCreateRole(roleRepository, "CLIENT", "Client expéditeur");
                 Role userRole = getOrCreateRole(roleRepository, "USER", "Utilisateur standard");
 
-                // 2. Sauvegarder les utilisateurs avec les objets Role créés
                 createUser(userRepository, passwordEncoder, "admin", "admin@smartlogi.com", "admin123", adminRole);
                 createUser(userRepository, passwordEncoder, "manager", "manager@smartlogi.com", "manager123", managerRole);
                 createUser(userRepository, passwordEncoder, "livreur", "livreur@smartlogi.com", "livreur123", livreurRole);
@@ -63,7 +62,7 @@ public class DataInitializer {
                 .username(username)
                 .email(email)
                 .password(encoder.encode(pass))
-                .role(role) // On passe l'objet Role ici
+                .role(role)
                 .build());
     }
 }

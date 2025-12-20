@@ -40,14 +40,10 @@ public class SecurityConfig {
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
-                        // Endpoints publics
-                        .requestMatchers("/auth/**").permitAll()
 
-                        // RBAC par Autorités/Permissions
+                        .requestMatchers("/auth/**").permitAll()
                         .requestMatchers("/admin/permissions/**").hasAuthority("ADMIN_MANAGE_PERMISSIONS")
                         .requestMatchers(HttpMethod.POST, "/colis/**").hasAuthority("COLIS_CREATE")
-
-                        // RBAC par Rôles
                         .requestMatchers("/gestionnaire/**").hasRole("MANAGER")
 
                         .anyRequest().authenticated()
@@ -79,11 +75,27 @@ public class SecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        configuration.setAllowedOrigins(Arrays.asList("*"));
-        configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
-        configuration.setAllowedHeaders(Arrays.asList("*"));
+
+        configuration.setAllowedOrigins(Arrays.asList(
+                "http://localhost:4200",
+                "http://localhost:3000",
+                "http://localhost:8080"
+        ));
+
+        configuration.setAllowedMethods(Arrays.asList(
+                "GET", "POST", "PUT", "DELETE", "OPTIONS"
+        ));
+
+        configuration.setAllowedHeaders(Arrays.asList(
+                "Authorization",
+                "Content-Type"
+        ));
+
+        configuration.setAllowCredentials(true);
+
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", configuration);
         return source;
     }
+
 }
