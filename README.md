@@ -4,15 +4,12 @@
 ![ApiDog](https://img.shields.io/badge/ApiDog-4A90E2?style=for-the-badge&logo=swagger&logoColor=white)
 
 ---
-## 📚 API Collections – Smart Delivery
+## 🧩 API Collections (Smart Delivery)
 
-Découvrez les collections API du projet **Smart Delivery**, documentées et testables via **ApiDog** :
-
-- 🔐 **Permission Collection**  
-  👉 https://bd0l8z4tse.apidog.io/
-
-- 🚚 **Smart Delivery Collection**  
-  👉 https://11geqw0kuk.apidog.io/
+| API | Description | Lien |
+|---|---|---|
+| 🔐 Permissions | Gestion des rôles et permissions | https://bd0l8z4tse.apidog.io/ |
+| 🚚 Smart Delivery | Gestion des livraisons | https://11geqw0kuk.apidog.io/ |
 
 ---
 # Architecture de Logging et de Développement Backend
