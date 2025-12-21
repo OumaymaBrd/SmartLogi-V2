@@ -47,6 +47,8 @@
 - **Colis** - Gestion des colis avec statuts et priorités
 - **Produit** - Gestion des produits
 - **HistoriqueLivraison** - Traçabilité complète des colis
+- **Permission** - regroupe toutes les permissions applicables, en fonction des responsabilités associées à chaque rôle
+- **Role** – définit les différents rôles du système Smart Delivery, tels que Admin, Manager et Client.
 
 ### API REST
 - CRUD complet pour toutes les entités
@@ -55,7 +57,10 @@
 - Filtrage par statut, priorité, zone, ville
 - Statistiques par livreur et zone
 
-## Endpoints API
+## 🌐 Endpoints API
+
+Les endpoints clés de l’API sont présentés dans cette section.  
+La liste complète et détaillée est disponible via les collections **ApiDog**.
 
 ### Clients Expéditeurs
 - `POST /api/clients-expediteurs` - Créer un client
