@@ -4,10 +4,9 @@ COPY mvnw .
 COPY mvnw.cmd .
 COPY .mvn .mvn
 COPY pom.xml .
-# Téléchargement des dépendances
 RUN ./mvnw dependency:go-offline
 COPY src ./src
-# Build sans compilation des tests défectueux
+
 RUN ./mvnw clean package -Dmaven.test.skip=true
 
 FROM eclipse-temurin:17-jdk-jammy

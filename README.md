@@ -10,7 +10,7 @@
 
 ## Diagramme du Classe 
 
-![Diagramme Classe](images/diagrammeClasse.png)
+![Diagramme Classe](images/diagramme-classe-V2.png)
 
 ## Présentation des interfaces Grafana
 - **Statistiques** - Cette partie présente la vue statique de tous les logs générés

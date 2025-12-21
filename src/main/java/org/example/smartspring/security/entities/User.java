@@ -40,14 +40,12 @@ public class User implements UserDetails {
         if (role != null) {
             authorities.add(new SimpleGrantedAuthority("ROLE_" + role.getName()));
 
-            // C'est ici que les permissions du rôle sont récupérées
             if (role.getPermissions() != null) {
                 role.getPermissions().forEach(p ->
                         authorities.add(new SimpleGrantedAuthority(p.getName())));
             }
         }
 
-        // Permissions directes sur l'utilisateur
         if (permissions != null) {
             permissions.forEach(p ->
                     authorities.add(new SimpleGrantedAuthority(p.getName())));
