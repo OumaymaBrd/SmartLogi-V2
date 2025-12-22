@@ -8,6 +8,6 @@ import org.springframework.context.annotation.Configuration;
 @ConfigurationProperties(prefix = "jwt")
 @Data
 public class JwtConfig {
-    private String secret = "5367566B59703373367639792F423F4528482B4D6251655468576D5A71347437";
-    private long expiration = 86400000;
+    private String secret ;
+    private long expiration ;
 }

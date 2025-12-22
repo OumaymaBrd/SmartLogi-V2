@@ -42,12 +42,9 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             final String username = jwtService.extractUsername(jwt);
 
             if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
-                // IMPORTANT : On recharge l'utilisateur (et ses permissions) depuis la BDD à chaque requête
                 UserDetails userDetails = this.userDetailsService.loadUserByUsername(username);
 
                 if (jwtService.validateToken(jwt, userDetails)) {
-                    // On crée l'authentification avec userDetails.getAuthorities()
-                    // qui contient les permissions fraîches de la BDD
                     UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(
                             userDetails,
                             null,

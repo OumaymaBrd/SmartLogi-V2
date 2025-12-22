@@ -24,7 +24,7 @@ import java.util.stream.Collectors;
 public class AuthServiceExtended {
 
     private final UserRepository userRepository;
-    private final RoleRepository roleRepository; // AJOUT : Pour récupérer le rôle en DB
+    private final RoleRepository roleRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtServiceExtended jwtService;
     private final AuthenticationManager authenticationManager;
@@ -39,8 +39,6 @@ public class AuthServiceExtended {
             throw new RuntimeException("L'email existe déjà");
         }
 
-        // CORRECTION 1 : Récupérer l'entité Role depuis la base de données
-        // On suppose que l'utilisateur envoie une chaîne (ex: "CLIENT") ou on met CLIENT par défaut
         String roleToFind = (request.getRole() != null) ? request.getRole().toString() : "CLIENT";
         Role userRole = roleRepository.findByName(roleToFind)
                 .orElseThrow(() -> new RuntimeException("Rôle " + roleToFind + " non trouvé en base"));
@@ -49,7 +47,7 @@ public class AuthServiceExtended {
                 .username(request.getUsername())
                 .email(request.getEmail())
                 .password(passwordEncoder.encode(request.getPassword()))
-                .role(userRole) // Passage de l'objet Role persistant
+                .role(userRole)
                 .permissions(new HashSet<>())
                 .build();
 
@@ -73,9 +71,7 @@ public class AuthServiceExtended {
         return mapToResponse(user, token, "Connexion réussie");
     }
 
-    // CORRECTION 2 : Factorisation pour gérer les permissions et le nom du rôle
     private AuthResponse mapToResponse(User user, String token, String message) {
-        // Extraction des noms de permissions depuis le Set<Permission>
         List<String> permissionNames = user.getPermissions().stream()
                 .map(Permission::getName)
                 .collect(Collectors.toList());
@@ -85,7 +81,6 @@ public class AuthServiceExtended {
                 .userId(user.getId())
                 .username(user.getUsername())
                 .email(user.getEmail())
-                // .getName() remplace .name() car Role est une Entité
                 .role(user.getRole() != null ? user.getRole().getName() : "NONE")
                 .permissions(permissionNames)
                 .message(message)

@@ -31,7 +31,8 @@ public class RolePermissionService {
     private EntityManager entityManager;
 
     @Transactional
-    public RolePermissionDTO assignPermissionsToRole(String roleId, AssignPermissionRequest request) {
+    public RolePermissionDTO assignPermissionsToRole(
+            String roleId, AssignPermissionRequest request) {
         Role role = roleRepository.findByIdWithPermissions(roleId)
                 .orElseThrow(() -> new RuntimeException("Rôle non trouvé"));
 
@@ -39,7 +40,6 @@ public class RolePermissionService {
 
         role.getPermissions().addAll(permissions);
 
-        // saveAndFlush écrit immédiatement le nouvel état dans role_permissions
         roleRepository.saveAndFlush(role);
 
         entityManager.clear();
@@ -51,23 +51,19 @@ public class RolePermissionService {
         Role role = roleRepository.findByIdWithPermissions(roleId)
                 .orElseThrow(() -> new RuntimeException("Rôle non trouvé"));
 
-        // Utilisation de removeIf pour garantir la suppression dans le Set par ID
         boolean removed = role.getPermissions().removeIf(p -> p.getId().equals(permissionId));
 
         if (!removed) {
             log.warn("Permission non trouvée dans ce rôle : {}", permissionId);
         }
 
-        // Force la suppression physique en base de données
         roleRepository.saveAndFlush(role);
 
-        // On vide la session pour que le prochain appel (ou le refresh token) relise MySQL
         entityManager.flush();
         entityManager.clear();
 
-        log.info("✅ Relation supprimée en base de données pour le rôle {}", role.getName());
+        log.info("Relation supprimée en base de données pour le rôle {}", role.getName());
 
-        // On recharge une version propre pour le retour DTO
         Role updatedRole = roleRepository.findByIdWithPermissions(roleId).orElseThrow();
         return mapToDTO(updatedRole);
     }

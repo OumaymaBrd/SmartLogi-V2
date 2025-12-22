@@ -27,26 +27,17 @@ public class AuthService {
 
     @Transactional
     public AuthResponse refreshToken(String username) {
-        // 1. Synchroniser les changements en attente avec la BDD
         entityManager.flush();
-
-        // 2. Récupérer l'utilisateur actuel (potentiellement depuis le cache)
         User user = userRepository.findByUsername(username)
                 .orElseThrow(() -> new RuntimeException("Utilisateur non trouvé"));
 
-        // 3. ÉVICTION DU CACHE (Crucial pour voir les suppressions)
-        // On détache l'objet Role et User pour forcer un SELECT physique lors du rechargement
         if (user.getRole() != null) {
             entityManager.detach(user.getRole());
         }
         entityManager.detach(user);
-
-        // 4. RECHARGEMENT PROPRE
-        // Hibernate est maintenant obligé de refaire les requêtes JOIN sur les permissions
         User freshUser = userRepository.findByUsername(username)
                 .orElseThrow(() -> new RuntimeException("Erreur de synchronisation"));
 
-        // Initialisation de la collection pour éviter LazyInitializationException
         if (freshUser.getRole() != null) {
             freshUser.getRole().getPermissions().size();
         }
@@ -60,7 +51,6 @@ public class AuthService {
                 new UsernamePasswordAuthenticationToken(request.getUsername(), request.getPassword())
         );
 
-        // Nettoyage global du cache avant le login
         entityManager.clear();
 
         User user = userRepository.findByUsername(request.getUsername())
@@ -70,7 +60,6 @@ public class AuthService {
     }
 
     private AuthResponse mapToResponse(User user, String message) {
-        // Le JwtService utilisera freshUser.getAuthorities() avec les données réelles
         String jwtToken = jwtService.generateToken(user);
 
         List<String> perms = user.getAuthorities().stream()

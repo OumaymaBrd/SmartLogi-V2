@@ -29,12 +29,9 @@ public class JwtServiceExtended {
     public String generateToken(User user) {
         Map<String, Object> extraClaims = new HashMap<>();
 
-        // CORRECTION 1 : Accès au nom du rôle via l'entité Role
-        // On vérifie si le rôle existe pour éviter un NullPointerException
         String roleName = (user.getRole() != null) ? user.getRole().getName() : "USER";
         extraClaims.put("role", roleName);
 
-        // CORRECTION 2 : Extraction des permissions (Set<Permission> dans User)
         String permissions = user.getPermissions().stream()
                 .map(Permission::getName)
                 .collect(Collectors.joining(","));
@@ -42,13 +39,12 @@ public class JwtServiceExtended {
 
         extraClaims.put("userId", user.getId());
 
-        // CORRECTION 3 : Syntaxe JJWT 0.12+ (Utilisation de claims() et signWith())
         return Jwts.builder()
                 .claims(extraClaims)
                 .subject(user.getUsername())
                 .issuedAt(new Date(System.currentTimeMillis()))
                 .expiration(new Date(System.currentTimeMillis() + jwtExpiration))
-                .signWith(getSignInKey()) // Signature automatique avec l'algorithme sécurisé
+                .signWith(getSignInKey())
                 .compact();
     }
 
@@ -75,7 +71,6 @@ public class JwtServiceExtended {
     }
 
     private Claims extractAllClaims(String token) {
-        // CORRECTION 4 : Syntaxe de parsing moderne pour JJWT 0.12+
         return Jwts.parser()
                 .verifyWith(getSignInKey())
                 .build()

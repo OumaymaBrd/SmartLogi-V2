@@ -9,8 +9,11 @@ import org.springframework.context.annotation.Configuration;
 public class FilterConfig {
 
     @Bean
-    public FilterRegistrationBean<JwtAuthenticationFilter> registration(JwtAuthenticationFilter filter) {
-        FilterRegistrationBean<JwtAuthenticationFilter> registration = new FilterRegistrationBean<>(filter);
+    public FilterRegistrationBean<JwtAuthenticationFilter>
+    registration(JwtAuthenticationFilter filter) {
+
+        FilterRegistrationBean<JwtAuthenticationFilter>
+                registration = new FilterRegistrationBean<>(filter);
         registration.setEnabled(false);
         return registration;
     }

@@ -9,14 +9,10 @@ import java.util.Set;
 
 @Entity
 @Table(name = "permissions")
-@Data
-@NoArgsConstructor
-@AllArgsConstructor
-@Builder
-public class Permission {
+@Data @NoArgsConstructor @AllArgsConstructor @Builder
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.UUID)
+public class Permission {
+    @Id @GeneratedValue(strategy = GenerationType.UUID)
     private String id;
 
     @Column(nullable = false, unique = true)

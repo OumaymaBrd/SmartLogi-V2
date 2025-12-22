@@ -24,7 +24,6 @@ public class JwtService {
     public String generateToken(User user) {
         Map<String, Object> extraClaims = new HashMap<>();
 
-        // Utilise getAuthorities() qui contient les données fraîches suite au refresh()
         List<String> authorities = user.getAuthorities().stream()
                 .map(GrantedAuthority::getAuthority)
                 .collect(Collectors.toList());
