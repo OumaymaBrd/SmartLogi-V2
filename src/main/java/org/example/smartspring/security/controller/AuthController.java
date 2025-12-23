@@ -41,21 +41,6 @@ public class AuthController {
         }
     }
 
-//    @PostMapping("/login")
-//    public ResponseEntity<AuthResponse> login(@Valid @RequestBody LoginRequest request) {
-//        try {
-//            AuthResponse response = authService.login(request);
-//            return ResponseEntity.ok(response);
-//        } catch (RuntimeException e) {
-//            return ResponseEntity.badRequest().body(
-//                    AuthResponse.builder()
-//                            .message("Nom d'utilisateur ou mot de passe incorrect")
-//                            .build()
-//            );
-//        }
-//    }
-
-
     @PostMapping("/login")
     public ResponseEntity<AuthResponse> login(@RequestBody LoginRequest request) {
         return ResponseEntity.ok(authService.login(request));
