@@ -3,11 +3,11 @@ package org.example.smartspring.security.entities;
 import jakarta.persistence.*;
 import lombok.*;
 import org.example.smartspring.entities.Permission;
+import org.example.smartspring.security.enums.AuthProvider;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 import java.util.*;
-import java.util.stream.Collectors;
 
 @Entity
 @Table(name = "users")
@@ -19,6 +19,15 @@ public class User implements UserDetails {
     private String username;
     private String email;
     private String password;
+
+    @Enumerated(EnumType.STRING)
+    @Builder.Default
+    private AuthProvider provider = AuthProvider.LOCAL;
+
+    private String providerId;
+
+    @Builder.Default
+    private boolean enabled = true;
 
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "role_id")
@@ -36,21 +45,17 @@ public class User implements UserDetails {
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
         Set<GrantedAuthority> authorities = new HashSet<>();
-
         if (role != null) {
             authorities.add(new SimpleGrantedAuthority("ROLE_" + role.getName()));
-
             if (role.getPermissions() != null) {
                 role.getPermissions().forEach(p ->
                         authorities.add(new SimpleGrantedAuthority(p.getName())));
             }
         }
-
         if (permissions != null) {
             permissions.forEach(p ->
                     authorities.add(new SimpleGrantedAuthority(p.getName())));
         }
-
         return authorities;
     }
 
@@ -59,5 +64,6 @@ public class User implements UserDetails {
     @Override public boolean isAccountNonExpired() { return true; }
     @Override public boolean isAccountNonLocked() { return true; }
     @Override public boolean isCredentialsNonExpired() { return true; }
-    @Override public boolean isEnabled() { return true; }
+
+    @Override public boolean isEnabled() { return enabled; }
 }

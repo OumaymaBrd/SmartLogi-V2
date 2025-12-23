@@ -4,6 +4,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.example.smartspring.security.entities.Role;
 import org.example.smartspring.security.entities.User;
+import org.example.smartspring.security.enums.AuthProvider;
 import org.example.smartspring.security.repository.RoleRepository;
 import org.example.smartspring.security.repository.UserRepository;
 import org.example.smartspring.security.service.JwtService;
@@ -41,26 +42,35 @@ public class OAuth2LoginSuccessHandler extends SimpleUrlAuthenticationSuccessHan
 
         OAuth2User oAuth2User = (OAuth2User) authentication.getPrincipal();
         String email = oAuth2User.getAttribute("email");
+        String googleId = oAuth2User.getAttribute("sub");
 
         User user = userRepository.findByEmail(email).orElseGet(() -> {
             Role clientRole = roleRepository.findByName("CLIENT")
                     .orElseThrow(() -> new RuntimeException("Rôle CLIENT non trouvé en base."));
 
-            User newUser = User.builder()
+            return userRepository.save(User.builder()
                     .email(email)
                     .username(email)
-                    .password(passwordEncoder.encode("123456"))
+                    .password(passwordEncoder.encode(UUID.randomUUID().toString()))
                     .role(clientRole)
-                    .build();
-            return userRepository.save(newUser);
+                    .provider(AuthProvider.GOOGLE)
+                    .providerId(googleId)
+                    .enabled(true)
+                    .build());
         });
+
+        if (user.getProviderId() == null) {
+            user.setProvider(AuthProvider.GOOGLE);
+            user.setProviderId(googleId);
+            userRepository.save(user);
+        }
 
         String token = jwtService.generateToken(user);
 
         response.setContentType("application/json");
         response.setCharacterEncoding("UTF-8");
         response.getWriter().write(
-                String.format("{\"status\": \"SUCCESS\", \"auth\": \"GOOGLE\", \"token\": \"%s\"}", token)
+                String.format("{\"status\": \"SUCCESS\", \"provider\": \"%s\", \"token\": \"%s\"}", user.getProvider(), token)
         );
     }
 }
