@@ -31,16 +31,12 @@ public class PermissionInitializer implements CommandLineRunner {
     @Transactional
     public void run(String... args) {
         initializePermissions();
-
         initializeRoles();
-
         createDefaultUsers();
-
         syncGlobalPermissions();
     }
 
     private void initializePermissions() {
-        System.out.println(">>> Étape 1 : Persistance des permissions...");
         for (PermissionEnum permEnum : PermissionEnum.values()) {
             if (!permissionRepository.existsByName(permEnum.name())) {
                 permissionRepository.save(Permission.builder()
@@ -53,52 +49,34 @@ public class PermissionInitializer implements CommandLineRunner {
     }
 
     private void initializeRoles() {
-        System.out.println(">>> Étape 2 : Configuration des Rôles (Accès Total pour Manager)...");
         List<Permission> allPerms = permissionRepository.findAll();
-
         createRoleWithPermissions("ADMIN", "Super Administrateur", allPerms);
-        createRoleWithPermissions("MANAGER", "Gestionnaire avec accès complet", allPerms);
-
+        createRoleWithPermissions("MANAGER", "Gestionnaire complet", allPerms);
 
         List<Permission> livreurPerms = allPerms.stream()
-                .filter(p -> p.getName().equals("COLIS_READ_ASSIGNED")
-                        || p.getName().equals("COLIS_UPDATE_STATUS")
-                        || p.getName().equals("HISTORIQUE_COMMENT"))
+                .filter(p -> p.getName().contains("COLIS_READ") || p.getName().contains("UPDATE_STATUS"))
                 .collect(Collectors.toList());
-        createRoleWithPermissions("LIVREUR", "Livreur de Terrain", livreurPerms);
+        createRoleWithPermissions("LIVREUR", "Livreur", livreurPerms);
 
-        createRoleIfNotFound("CLIENT", "Client Expéditeur");
+        if (roleRepository.findByName("CLIENT").isEmpty()) {
+            roleRepository.save(Role.builder().name("CLIENT").description("Client").build());
+        }
     }
 
     private void createRoleWithPermissions(String name, String desc, List<Permission> perms) {
         Role role = roleRepository.findByName(name).orElseGet(() ->
                 roleRepository.save(Role.builder().name(name).description(desc).build())
         );
-
         role.setPermissions(new HashSet<>(perms));
         roleRepository.save(role);
-        System.out.println("Rôle [" + name + "] mis à jour avec " + perms.size() + " permissions.");
-    }
-
-    private void createRoleIfNotFound(String name, String desc) {
-        if (roleRepository.findByName(name).isEmpty()) {
-            roleRepository.save(Role.builder().name(name).description(desc).build());
-        }
     }
 
     private void createDefaultUsers() {
-        System.out.println(">>> Étape 3 : Initialisation des comptes utilisateurs...");
-
         if (!userRepository.existsByUsername("admin")) {
             createAccount("admin", "admin@smartlogi.com", "admin123", "ADMIN");
         }
-
         if (!userRepository.existsByUsername("manager")) {
             createAccount("manager", "manager@smartlogi.com", "manager123", "MANAGER");
-        }
-
-        if (!userRepository.existsByUsername("client")) {
-            createAccount("client", "client@smartlogi.com", "client123", "CLIENT");
         }
     }
 
@@ -109,21 +87,18 @@ public class PermissionInitializer implements CommandLineRunner {
                 .email(email)
                 .password(passwordEncoder.encode(password))
                 .role(role)
+                .enabled(true)
                 .build());
-        System.out.println("Compte créé : " + username + " [" + roleName + "]");
     }
 
     private void syncGlobalPermissions() {
         List<Permission> allPermissions = permissionRepository.findAll();
         Set<Permission> permsSet = new HashSet<>(allPermissions);
-
         userRepository.findAll().forEach(user -> {
-            String rName = user.getRole().getName();
-            if ("ADMIN".equals(rName) || "MANAGER".equals(rName)) {
+            if (user.getRole() != null && ("ADMIN".equals(user.getRole().getName()) || "MANAGER".equals(user.getRole().getName()))) {
                 user.setPermissions(permsSet);
                 userRepository.save(user);
             }
         });
-        System.out.println(">>> Étape 4 : Synchronisation globale terminée (Admin & Manager).");
     }
 }

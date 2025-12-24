@@ -48,13 +48,11 @@ public class User implements UserDetails {
         if (role != null) {
             authorities.add(new SimpleGrantedAuthority("ROLE_" + role.getName()));
             if (role.getPermissions() != null) {
-                role.getPermissions().forEach(p ->
-                        authorities.add(new SimpleGrantedAuthority(p.getName())));
+                role.getPermissions().forEach(p -> authorities.add(new SimpleGrantedAuthority(p.getName())));
             }
         }
         if (permissions != null) {
-            permissions.forEach(p ->
-                    authorities.add(new SimpleGrantedAuthority(p.getName())));
+            permissions.forEach(p -> authorities.add(new SimpleGrantedAuthority(p.getName())));
         }
         return authorities;
     }
@@ -64,6 +62,5 @@ public class User implements UserDetails {
     @Override public boolean isAccountNonExpired() { return true; }
     @Override public boolean isAccountNonLocked() { return true; }
     @Override public boolean isCredentialsNonExpired() { return true; }
-
     @Override public boolean isEnabled() { return enabled; }
 }
