@@ -43,9 +43,9 @@ loki/
 
 src/main/resources
 
-mvnw
-mvnw.cmd
-.mvn
+
+
+
 tasks.txt
 tasks_clean.txt
 import_jira.sh
