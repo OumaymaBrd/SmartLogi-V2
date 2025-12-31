@@ -5,10 +5,13 @@ import org.example.smartspring.dto.destinataire.AddDestinataireDTO;
 import org.example.smartspring.dto.destinataire.UpdateDestinataireDTO;
 import org.example.smartspring.dto.destinataire.DestinataireDTO;
 import org.example.smartspring.service.DestinataireService;
+import org.example.smartspring.security.service.JwtService; // Import à vérifier
+import org.example.smartspring.security.service.CustomUserDetailsService; // Import à vérifier
 
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
+import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 
@@ -24,8 +27,7 @@ import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
-@SpringBootTest
-@AutoConfigureMockMvc
+@WebMvcTest(DestinataireController.class)
 @WithMockUser(authorities = {
         "DESTINATAIRE_CREATE",
         "DESTINATAIRE_READ",
@@ -39,6 +41,14 @@ class DestinataireControllerTest {
 
     @MockBean
     private DestinataireService destinataireService;
+
+    // --- AJOUT DES MOCKS DE SÉCURITÉ POUR DÉBLOQUER JENKINS ---
+    @MockBean
+    private JwtService jwtService;
+
+    @MockBean
+    private CustomUserDetailsService customUserDetailsService;
+    // ---------------------------------------------------------
 
     @Autowired
     private ObjectMapper objectMapper;

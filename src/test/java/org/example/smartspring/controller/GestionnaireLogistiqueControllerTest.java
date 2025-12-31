@@ -7,7 +7,8 @@ import org.example.smartspring.dto.colis.UpdateColisDTO;
 import org.example.smartspring.entities.Colis;
 import org.example.smartspring.service.ColisService;
 import org.example.smartspring.service.GestionnaireLogistiqueService;
-import org.example.smartspring.security.service.JwtService; // Import à vérifier selon votre package
+import org.example.smartspring.security.service.JwtService;
+import org.example.smartspring.security.service.CustomUserDetailsService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
@@ -15,7 +16,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
-import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.test.web.servlet.MockMvc;
 
 import static org.mockito.ArgumentMatchers.any;
@@ -38,12 +38,13 @@ class GestionnaireLogistiqueControllerTest {
     @MockBean
     private ColisService colisService;
 
-    // Mocks indispensables pour Spring Security / JWT
+    // --- Mocks indispensables pour débloquer Spring Security dans Jenkins ---
     @MockBean
     private JwtService jwtService;
 
     @MockBean
-    private UserDetailsService userDetailsService;
+    private CustomUserDetailsService customUserDetailsService;
+    // -----------------------------------------------------------------------
 
     private AddGestionnaireLogistqueDTO dto;
     private GestionnaireLogistiqueDTO gDto;
@@ -86,9 +87,7 @@ class GestionnaireLogistiqueControllerTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(dto)))
                 .andExpect(status().isCreated())
-                .andExpect(result -> {
-                    // Adapté pour ignorer les problèmes de sécurité si nécessaire
-                });
+                .andExpect(content().string(org.hamcrest.Matchers.containsString("Creation Gestionnaire Logistique Avec Succes")));
     }
 
     @Test
@@ -96,7 +95,8 @@ class GestionnaireLogistiqueControllerTest {
         mockMvc.perform(put("/gestionnairelogistique/affecter-livreur")
                         .param("numero_colis", "C123")
                         .param("idGestionnaire", "1"))
-                .andExpect(status().isBadRequest());
+                .andExpect(status().isBadRequest())
+                .andExpect(content().string("Vous devez fournir soit livreur_id soit livreur_id_livree"));
     }
 
     @Test
@@ -107,6 +107,7 @@ class GestionnaireLogistiqueControllerTest {
         mockMvc.perform(put("/gestionnairelogistique/updateStatutColis/C123")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(updateColisDTO)))
-                .andExpect(status().isOk());
+                .andExpect(status().isOk())
+                .andExpect(content().string(org.hamcrest.Matchers.containsString("Livreur collecteur affecté : livreur1")));
     }
 }
