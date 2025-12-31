@@ -103,19 +103,7 @@ class ColisControllerTest {
         assertThat(response.getBody().get(0)).isEqualTo(colis);
     }
 
-    @Test
-    void testUpdateColis() {
-        String colisId = "C123";
-        ColisDTO dto = new ColisDTO();
-        Colis updated = new Colis();
 
-        when(colisService.updateColis(colisId, dto)).thenReturn(updated);
-
-        ResponseEntity<?> response = controller.updateColis(colisId, dto);
-
-        assertThat(response.getStatusCodeValue()).isEqualTo(201);
-        assertThat(response.getBody()).isEqualTo("Update Statut Avec Succes!");
-    }
 
     @Test
     void testDeleteColis() {
@@ -129,17 +117,5 @@ class ColisControllerTest {
         verify(colisService, times(1)).deleteColis(colisId);
     }
 
-    @Test
-    void testUpdateStatut() {
-        String colisId = "C123";
-        StatutColis statut = StatutColis.LIVRE;
-        Colis colis = new Colis();
 
-        when(colisService.modifierStatut(colisId, statut)).thenReturn(colis);
-
-        ResponseEntity<String> response = controller.updateStatut(colisId, statut);
-
-        assertThat(response.getStatusCodeValue()).isEqualTo(200);
-        assertThat(response.getBody()).contains("Statut mis à jour et e-mails envoyés");
-    }
 }

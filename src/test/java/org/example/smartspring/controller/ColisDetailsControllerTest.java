@@ -1,12 +1,6 @@
 package org.example.smartspring.controller;
 
-import org.example.smartspring.dto.colis.ColisDetails.ColisDetailsDTO;
-import org.example.smartspring.dto.colis.ColisDetails.UpdateStatutLivreurColis;
-import org.example.smartspring.dto.colis.ColisDetails.LivreurCollecteDTO;
-import org.example.smartspring.dto.colis.ColisDetails.LivreurLivreeDTO;
-import org.example.smartspring.dto.colis.ColisDetails.ProduitDetailsDTO;
-import org.example.smartspring.dto.colis.ColisDetails.DestinataireDetailsDTO;
-import org.example.smartspring.dto.colis.ColisDetails.ZoneDeatailsDTO;
+import org.example.smartspring.dto.colis.ColisDetails.*;
 import org.example.smartspring.enums.PrioriteColis;
 import org.example.smartspring.enums.StatutColis;
 import org.example.smartspring.service.ColisDetailsService;
@@ -17,24 +11,28 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.PageRequest;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
 
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
 class ColisDetailsControllerTest {
 
     @Mock
     private ColisDetailsService service;
+
+    @Mock
+    private Authentication authentication;
 
     @InjectMocks
     private ColisDetailsController controller;
@@ -76,7 +74,8 @@ class ColisDetailsControllerTest {
                 .zone(new ZoneDeatailsDTO("Zone 1", "Description zone"))
                 .build();
 
-        Page<ColisDetailsDTO> pageMock = new PageImpl<>(Collections.singletonList(dto));
+        Page<ColisDetailsDTO> pageMock =
+                new PageImpl<>(Collections.singletonList(dto));
 
         when(service.getAll(
                 any(), any(), any(), any(), any(), any(Pageable.class)))
@@ -96,19 +95,32 @@ class ColisDetailsControllerTest {
     @Test
     void testUpdateStatutColisLivreur() {
         String livreurId = "L123";
-        UpdateStatutLivreurColis updateDto = new UpdateStatutLivreurColis(StatutColis.LIVRE);
+        UpdateStatutLivreurColis updateDto =
+                new UpdateStatutLivreurColis(StatutColis.LIVRE);
 
-        ColisDetailsDTO dto = ColisDetailsDTO.builder().id("C1").build();
-        List<ColisDetailsDTO> updatedList = Collections.singletonList(dto);
+        ColisDetailsDTO dto = ColisDetailsDTO.builder()
+                .id("C1")
+                .build();
+
+        List<ColisDetailsDTO> updatedList =
+                Collections.singletonList(dto);
 
         when(service.updateStatutColisLivreur(eq(livreurId), eq(updateDto)))
                 .thenReturn(updatedList);
 
         ResponseEntity<List<ColisDetailsDTO>> response =
-                controller.updateStatutColisLivreur(livreurId, updateDto);
+                controller.updateStatutColisLivreur(
+                        livreurId,
+                        updateDto,
+                        authentication
+                );
 
         assertEquals(HttpStatus.OK, response.getStatusCode());
+        assertNotNull(response.getBody());
         assertEquals(1, response.getBody().size());
         assertEquals(dto, response.getBody().get(0));
+
+        verify(service, times(1))
+                .updateStatutColisLivreur(livreurId, updateDto);
     }
 }

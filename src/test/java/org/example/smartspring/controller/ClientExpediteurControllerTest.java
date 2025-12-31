@@ -15,6 +15,8 @@ import org.springframework.http.ResponseEntity;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 
 class ClientExpediteurControllerTest {
@@ -29,6 +31,8 @@ class ClientExpediteurControllerTest {
     void setUp() {
         MockitoAnnotations.openMocks(this);
     }
+
+
 
     private AddClientExpediteurDTO createValidAddDTO() {
         return AddClientExpediteurDTO.builder()
@@ -61,6 +65,8 @@ class ClientExpediteurControllerTest {
                 .build();
     }
 
+
+
     @Test
     void testCreateClientExpediteur() {
         AddClientExpediteurDTO dto = createValidAddDTO();
@@ -71,6 +77,7 @@ class ClientExpediteurControllerTest {
         ResponseEntity<ClientExpediteurDTO> response = controller.createClientExpediteur(dto);
 
         assertThat(response.getStatusCodeValue()).isEqualTo(201);
+        assertThat(response.getBody()).isNotNull();
         assertThat(response.getBody().getNom()).isEqualTo("Bramid");
 
         verify(service, times(1)).createClientExpediteur(dto);
@@ -83,21 +90,25 @@ class ClientExpediteurControllerTest {
 
         when(service.getAllClientsExpediteurs(any(Pageable.class))).thenReturn(page);
 
-        ResponseEntity<Page<ClientExpediteurDTO>> response = controller.getAllClientsExpediteurs(Pageable.unpaged());
+        ResponseEntity<?> response = controller.getAllClientsExpediteurs(Pageable.unpaged());
 
         assertThat(response.getStatusCodeValue()).isEqualTo(200);
-        assertThat(response.getBody().getContent()).hasSize(1);
+        assertThat(response.getBody()).isInstanceOf(Page.class);
+
+        Page<?> body = (Page<?>) response.getBody();
+        assertThat(body.getContent()).hasSize(1);
     }
 
     @Test
     void testGetAllClientsExpediteurs_empty() {
-        Page<ClientExpediteurDTO> page = Page.empty();
+        Page<ClientExpediteurDTO> emptyPage = Page.empty();
 
-        when(service.getAllClientsExpediteurs(any(Pageable.class))).thenReturn(page);
+        when(service.getAllClientsExpediteurs(any(Pageable.class))).thenReturn(emptyPage);
 
-        ResponseEntity<Page<ClientExpediteurDTO>> response = controller.getAllClientsExpediteurs(Pageable.unpaged());
+        ResponseEntity<?> response = controller.getAllClientsExpediteurs(Pageable.unpaged());
 
-        assertThat(response.getStatusCodeValue()).isEqualTo(204);
+        assertThat(response.getStatusCodeValue()).isEqualTo(404);
+        assertThat(response.getBody()).isEqualTo("Aucun Client Trouvé");
     }
 
     @Test
@@ -110,24 +121,26 @@ class ClientExpediteurControllerTest {
         ResponseEntity<ClientExpediteurDTO> response = controller.getClientExpediteurById(id);
 
         assertThat(response.getStatusCodeValue()).isEqualTo(200);
+        assertThat(response.getBody()).isNotNull();
         assertThat(response.getBody().getNom()).isEqualTo("Bramid");
     }
 
     @Test
     void testUpdateClientExpediteur() {
         String id = "CL123";
-        UpdateClientExpediteurDTO dto = createValidUpdateDTO();
-        ClientExpediteurDTO responseDto = createClientExpediteurDTO();
-        responseDto.setNom("BramidUpdated");
+        UpdateClientExpediteurDTO updateDTO = createValidUpdateDTO();
+        ClientExpediteurDTO updatedDto = createClientExpediteurDTO();
+        updatedDto.setNom("BramidUpdated");
 
-        when(service.updateClientExpediteur(id, dto)).thenReturn(responseDto);
+        when(service.updateClientExpediteur(id, updateDTO)).thenReturn(updatedDto);
 
-        ResponseEntity<ClientExpediteurDTO> response = controller.updateClientExpediteur(id, dto);
+        ResponseEntity<ClientExpediteurDTO> response = controller.updateClientExpediteur(id, updateDTO);
 
         assertThat(response.getStatusCodeValue()).isEqualTo(200);
+        assertThat(response.getBody()).isNotNull();
         assertThat(response.getBody().getNom()).isEqualTo("BramidUpdated");
 
-        verify(service, times(1)).updateClientExpediteur(id, dto);
+        verify(service, times(1)).updateClientExpediteur(id, updateDTO);
     }
 
     @Test
@@ -138,8 +151,8 @@ class ClientExpediteurControllerTest {
 
         ResponseEntity<?> response = controller.deleteClientExpediteur(id);
 
-        assertThat(response.getStatusCodeValue()).isEqualTo(404);
-        assertThat(response.getBody()).isEqualTo("Suppression Avec Succes");
+        assertThat(response.getStatusCodeValue()).isEqualTo(200);
+        assertThat(response.getBody()).isEqualTo("Suppression Avec Succès");
 
         verify(service, times(1)).deleteClientExpediteur(id);
     }
@@ -152,11 +165,14 @@ class ClientExpediteurControllerTest {
 
         when(service.searchClientsExpediteurs(eq(keyword), any(Pageable.class))).thenReturn(page);
 
-        ResponseEntity<Page<ClientExpediteurDTO>> response = controller.searchClientsExpediteurs(keyword, Pageable.unpaged());
+        ResponseEntity<Page<ClientExpediteurDTO>> response =
+                controller.searchClientsExpediteurs(keyword, Pageable.unpaged());
 
         assertThat(response.getStatusCodeValue()).isEqualTo(200);
+        assertThat(response.getBody()).isNotNull();
         assertThat(response.getBody().getContent()).hasSize(1);
 
-        verify(service, times(1)).searchClientsExpediteurs(eq(keyword), any(Pageable.class));
+        verify(service, times(1))
+                .searchClientsExpediteurs(eq(keyword), any(Pageable.class));
     }
 }
