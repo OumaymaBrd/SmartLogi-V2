@@ -1,0 +1,75 @@
+databaseChangeLog:
+  - changeSet:
+      id: 029-changelog-fix-colis-produit-types
+      author: system
+      preConditions:
+        - onFail: MARK_RAN
+        - tableExists:
+            tableName: colis_produit
+      changes:
+        - modifyDataType:
+            tableName: colis_produit
+            columnName: colis_id
+            newDataType: char(36)
+
+        - modifyDataType:
+            tableName: colis_produit
+            columnName: produit_id
+            newDataType: char(36)
+
+        - modifyDataType:
+            tableName: colis_produit
+            columnName: id
+            newDataType: char(36)
+      rollback:
+        - modifyDataType:
+            tableName: colis_produit
+            columnName: colis_id
+            newDataType: int
+        - modifyDataType:
+            tableName: colis_produit
+            columnName: produit_id
+            newDataType: int
+        - modifyDataType:
+            tableName: colis_produit
+            columnName: id
+            newDataType: int
+
+  - changeSet:
+      id: 2-recreate-foreign-keys
+      author: system
+      preConditions:
+        - onFail: MARK_RAN
+        - tableExists:
+            tableName: colis_produit
+      changes:
+        - dropForeignKeyConstraint:
+            baseTableName: colis_produit
+            constraintName: fk_colis_produit_colis
+
+        - dropForeignKeyConstraint:
+            baseTableName: colis_produit
+            constraintName: fk_colis_produit_produit
+
+        - addForeignKeyConstraint:
+            baseTableName: colis_produit
+            baseColumnNames: colis_id
+            constraintName: fk_colis_produit_colis
+            referencedTableName: colis
+            referencedColumnNames: id
+            onDelete: CASCADE
+
+        - addForeignKeyConstraint:
+            baseTableName: colis_produit
+            baseColumnNames: produit_id
+            constraintName: fk_colis_produit_produit
+            referencedTableName: produit
+            referencedColumnNames: id
+            onDelete: CASCADE
+      rollback:
+        - dropForeignKeyConstraint:
+            baseTableName: colis_produit
+            constraintName: fk_colis_produit_colis
+        - dropForeignKeyConstraint:
+            baseTableName: colis_produit
+            constraintName: fk_colis_produit_produit

@@ -1,0 +1,9 @@
+databaseChangeLog:
+  - changeSet:
+      id: 010-modify-id-type
+      author: oumaymabrd
+      changes:
+        - modifyDataType:
+            tableName: zone
+            columnName: id
+            newDataType: char(36)

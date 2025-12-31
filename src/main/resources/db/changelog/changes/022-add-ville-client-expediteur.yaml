@@ -1,0 +1,12 @@
+databaseChangeLog:
+  - changeSet:
+      id: 022-add-ville-client-expediteur
+      author: oumaymabrd
+      changes:
+        - addColumn:
+            tableName: client_expediteur
+            columns:
+              - column:
+                  name: ville
+                  type: varchar(255)
+                  defaultValue: ''

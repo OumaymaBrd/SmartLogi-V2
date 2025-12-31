@@ -1,0 +1,15 @@
+databaseChangeLog:
+  - changeSet:
+      id: 036-add-livreur-to-historique
+      author: system
+      changes:
+        - addColumn:
+            tableName: historique_livraison
+            columns:
+              - column:
+                  name: livreur_id
+                  type: char(36)
+                  constraints:
+                    foreignKeyName: fk_historique_livreur
+                    referencedTableName: livreur
+                    referencedColumnNames: id

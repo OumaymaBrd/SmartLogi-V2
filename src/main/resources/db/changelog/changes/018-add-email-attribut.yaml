@@ -1,0 +1,11 @@
+databaseChangeLog:
+  - changeSet:
+      id: 018-add-email-attribut
+      author: oumaymabrd
+      changes:
+        - addColumn:
+            tableName: livreur
+            columns:
+              - column:
+                  name: email
+                  type: varchar(50)

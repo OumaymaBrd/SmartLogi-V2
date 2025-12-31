@@ -1,0 +1,19 @@
+databaseChangeLog:
+  - changeSet:
+      id: 037-fix-historique-column-sizes
+      author: system
+      changes:
+        - modifyDataType:
+            tableName: historique_livraison
+            columnName: colis_id
+            newDataType: char(36)
+
+        - modifyDataType:
+            tableName: historique_livraison
+            columnName: livreur_id
+            newDataType: char(36)
+
+        - modifyDataType:
+            tableName: historique_livraison
+            columnName: id
+            newDataType: char(36)

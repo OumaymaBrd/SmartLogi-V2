@@ -1,0 +1,120 @@
+databaseChangeLog:
+  - changeSet:
+      id: 020-modify-bdd-type-attributs
+      author: oumaymabrd
+      changes:
+        # Ajouter les colonnes manquantes d'abord
+        - addColumn:
+            tableName: destinataire
+            columns:
+              - column:
+                  name: client_expediteur_id
+                  type: char(36)
+                  constraints:
+                    nullable: true
+              - column:
+                  name: colis_id
+                  type: char(36)
+                  constraints:
+                    nullable: true
+        - addColumn:
+            tableName: produit
+            columns:
+              - column:
+                  name: client_expediteur_id
+                  type: char(36)
+                  constraints:
+                    nullable: true
+              - column:
+                  name: colis_id
+                  type: char(36)
+                  constraints:
+                    nullable: true
+        - addColumn:
+            tableName: zone
+            columns:
+              - column:
+                  name: client_expediteur_id
+                  type: char(36)
+                  constraints:
+                    nullable: true
+              - column:
+                  name: colis_id
+                  type: char(36)
+                  constraints:
+                    nullable: true
+
+        # Modifier les types existants
+        - modifyDataType:
+            tableName: client_expediteur
+            columnName: id
+            newDataType: CHAR(36)
+        - modifyDataType:
+            tableName: colis
+            columnName: id
+            newDataType: CHAR(36)
+        - modifyDataType:
+            tableName: colis
+            columnName: client_expediteur_id
+            newDataType: CHAR(36)
+        - modifyDataType:
+            tableName: destinataire
+            columnName: id
+            newDataType: CHAR(36)
+        - modifyDataType:
+            tableName: destinataire
+            columnName: client_expediteur_id
+            newDataType: CHAR(36)
+        - modifyDataType:
+            tableName: destinataire
+            columnName: colis_id
+            newDataType: CHAR(36)
+        - modifyDataType:
+            tableName: produit
+            columnName: id
+            newDataType: CHAR(36)
+        - modifyDataType:
+            tableName: produit
+            columnName: client_expediteur_id
+            newDataType: CHAR(36)
+        - modifyDataType:
+            tableName: produit
+            columnName: colis_id
+            newDataType: CHAR(36)
+        - modifyDataType:
+            tableName: zone
+            columnName: id
+            newDataType: CHAR(36)
+        - modifyDataType:
+            tableName: zone
+            columnName: client_expediteur_id
+            newDataType: CHAR(36)
+        - modifyDataType:
+            tableName: zone
+            columnName: colis_id
+            newDataType: CHAR(36)
+
+  - changeSet:
+      id: 101-add-uuid-default-values
+      author: oumaymabrd
+      changes:
+        - addDefaultValue:
+            tableName: client_expediteur
+            columnName: id
+            defaultValueComputed: "UUID()"
+        - addDefaultValue:
+            tableName: colis
+            columnName: id
+            defaultValueComputed: "UUID()"
+        - addDefaultValue:
+            tableName: destinataire
+            columnName: id
+            defaultValueComputed: "UUID()"
+        - addDefaultValue:
+            tableName: produit
+            columnName: id
+            defaultValueComputed: "UUID()"
+        - addDefaultValue:
+            tableName: zone
+            columnName: id
+            defaultValueComputed: "UUID()"

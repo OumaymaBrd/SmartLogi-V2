@@ -1,0 +1,35 @@
+databaseChangeLog:
+  - changeSet:
+      id: 030-changelog-create-gestionnaireLogistique
+      author: oumaymaBrd
+      preConditions:
+        - onFail: MARK_RAN
+        - not:
+            - tableExists:
+                tableName: gestionnaire_logistique
+      changes:
+        - createTable:
+            tableName: gestionnaire_logistique
+            columns:
+              - column:
+                  name: id
+                  type: char(36)
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: nom
+                  type: varchar(100)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: prenom
+                  type: varchar(100)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: email
+                  type: varchar(150)
+                  constraints:
+                    nullable: false
+                    unique: true

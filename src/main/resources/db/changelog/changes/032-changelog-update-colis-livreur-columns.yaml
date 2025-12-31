@@ -1,0 +1,18 @@
+databaseChangeLog:
+  - changeSet:
+      id: 032-changelog-update-colis-livreur-columns
+      author: oumaymaBrd
+      preConditions:
+        - onFail: MARK_RAN
+        - tableExists:
+            tableName: colis
+
+      changes:
+        - addColumn:
+            tableName: colis
+            columns:
+              - column:
+                  name: livreur_id_livree
+                  type: CHAR(36)
+                  constraints:
+                    nullable: true

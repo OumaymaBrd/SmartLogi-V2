@@ -1,0 +1,28 @@
+databaseChangeLog:
+  - changeSet:
+      id: 020-update-uuid-columns
+      author: oumaymabrd
+      changes:
+        # Livreur
+        - modifyDataType:
+            tableName: livreur
+            columnName: zone_id
+            newDataType: CHAR(36)
+
+        # Colis
+        - modifyDataType:
+            tableName: colis
+            columnName: zone_id
+            newDataType: CHAR(36)
+        - modifyDataType:
+            tableName: colis
+            columnName: livreur_id
+            newDataType: CHAR(36)
+        - modifyDataType:
+            tableName: colis
+            columnName: client_expediteur_id
+            newDataType: CHAR(36)
+        - modifyDataType:
+            tableName: colis
+            columnName: destinataire_id
+            newDataType: CHAR(36)

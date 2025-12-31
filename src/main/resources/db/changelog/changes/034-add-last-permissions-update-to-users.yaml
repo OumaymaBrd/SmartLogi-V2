@@ -1,0 +1,12 @@
+databaseChangeLog:
+  - changeSet:
+      id: 034-add-last-permissions-update-to-users
+      author: system
+      changes:
+        - addColumn:
+            tableName: users
+            columns:
+              - column:
+                  name: last_permissions_update
+                  type: datetime
+                  defaultValueComputed: CURRENT_TIMESTAMP

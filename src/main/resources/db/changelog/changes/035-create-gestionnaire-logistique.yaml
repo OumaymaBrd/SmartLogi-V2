@@ -1,0 +1,29 @@
+databaseChangeLog:
+  - changeSet:
+      id: 035-create-gestionnaire-logistique
+      author: system
+      changes:
+        - createTable:
+            tableName: gestionnaire_logistique
+            columns:
+              - column:
+                  name: id
+                  type: char(36)
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: nom
+                  type: varchar(255)
+              - column:
+                  name: prenom
+                  type: varchar(255)
+              - column:
+                  name: email
+                  type: varchar(191)
+                  constraints:
+                    unique: true
+                    nullable: false
+              - column:
+                  name: telephone
+                  type: varchar(20)

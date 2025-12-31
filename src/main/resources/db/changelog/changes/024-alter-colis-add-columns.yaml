@@ -1,0 +1,47 @@
+databaseChangeLog:
+  - changeSet:
+      id: 024-alter-colis-add-columns
+      author: oumaymabrd
+      preConditions:
+        onFail: CONTINUE
+        not:
+          tableExists:
+            tableName: colis
+      changes:
+        - addColumn:
+            tableName: colis
+            columns:
+              - column:
+                  name: numero_colis
+                  type: varchar(50)
+                  defaultValueComputed: CONCAT('COLIS_', LPAD(FLOOR(RAND()*90000+10000),5,'0'))
+                  constraints:
+                    nullable: false
+              - column:
+                  name: numero_suivi
+                  type: varchar(50)
+                  defaultValueComputed: CONCAT('SUIVI_', LPAD(FLOOR(RAND()*90000+10000),5,'0'))
+                  constraints:
+                    nullable: false
+              - column:
+                  name: date_creation
+                  type: datetime
+                  defaultValueComputed: CURRENT_TIMESTAMP
+                  constraints:
+                    nullable: false
+              - column:
+                  name: statut
+                  type: varchar(20)
+                  defaultValue: 'CREE'
+                  constraints:
+                    nullable: false
+              - column:
+                  name: livreur_id
+                  type: char(36)
+                  constraints:
+                    nullable: true
+              - column:
+                  name: zone_id
+                  type: char(36)
+                  constraints:
+                    nullable: true

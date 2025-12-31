@@ -1,0 +1,125 @@
+databaseChangeLog:
+  - changeSet:
+      id: 028-changelog-create-pivot-table
+      author: oumaymabrd
+      changes:
+        - dropForeignKeyConstraint:
+            baseTableName: produit
+            constraintName: fk_produit_colis
+        - dropColumn:
+            tableName: produit
+            columnName: colis_id
+      rollback:
+        - addColumn:
+            tableName: produit
+            columns:
+              - column:
+                  name: colis_id
+                  type: char(36)
+        - addForeignKeyConstraint:
+            baseTableName: produit
+            baseColumnNames: colis_id
+            constraintName: fk_produit_colis
+            referencedTableName: colis
+            referencedColumnNames: id
+
+  - changeSet:
+      id: 2-remove-quantite-from-produit
+      author: system
+      changes:
+        - dropColumn:
+            tableName: produit
+            columnName: quantite
+      rollback:
+        - addColumn:
+            tableName: produit
+            columns:
+              - column:
+                  name: quantite
+                  type: int
+                  constraints:
+                    nullable: false
+
+  - changeSet:
+      id: 3-add-prix-unitaire-to-produit
+      author: system
+      changes:
+        - addColumn:
+            tableName: produit
+            columns:
+              - column:
+                  name: prix_unitaire
+                  type: decimal(10,2)
+                  constraints:
+                    nullable: false
+                  defaultValueNumeric: 30.00
+      rollback:
+        - dropColumn:
+            tableName: produit
+            columnName: prix_unitaire
+
+  - changeSet:
+      id: 4-create-colis-produit-table
+      author: system
+      preConditions:
+        - onFail: MARK_RAN
+        - not:
+            - tableExists:
+                tableName: colis_produit
+      changes:
+        - createTable:
+            tableName: colis_produit
+            columns:
+              - column:
+                  name: id
+                  type: char(36)
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: colis_id
+                  type: char(36)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: produit_id
+                  type: char(36)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: quantite
+                  type: int
+                  constraints:
+                    nullable: false
+              - column:
+                  name: prix
+                  type: decimal(10,2)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: date_ajout
+                  type: timestamp
+                  constraints:
+                    nullable: false
+                  defaultValueComputed: CURRENT_TIMESTAMP
+        - addForeignKeyConstraint:
+            baseTableName: colis_produit
+            baseColumnNames: colis_id
+            constraintName: fk_colis_produit_colis
+            referencedTableName: colis
+            referencedColumnNames: id
+            onDelete: CASCADE
+        - addForeignKeyConstraint:
+            baseTableName: colis_produit
+            baseColumnNames: produit_id
+            constraintName: fk_colis_produit_produit
+            referencedTableName: produit
+            referencedColumnNames: id
+            onDelete: CASCADE
+        - addUniqueConstraint:
+            tableName: colis_produit
+            columnNames: colis_id, produit_id
+            constraintName: uk_colis_produit
+      rollback:
+        - dropTable:
+            tableName: colis_produit

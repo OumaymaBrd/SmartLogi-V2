@@ -1,0 +1,20 @@
+databaseChangeLog:
+  - changeSet:
+      id: 021-addColumn-destinataire
+      author: oumaymabrd
+      failOnError: false
+      preConditions:
+        - not:
+            columnExists:
+              tableName: destinataire
+              columnName: client_expediteur_id
+            onFail: MARK_RAN
+      changes:
+        - addColumn:
+            tableName: destinataire
+            columns:
+              - column:
+                  name: client_expediteur_id
+                  type: char(36)
+                  constraints:
+                    nullable: true

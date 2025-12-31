@@ -1,0 +1,165 @@
+databaseChangeLog:
+  - changeSet:
+      id: 025-update-colis-structure
+      author: oumaymaBrd
+      comment: "Supprimer les colonnes inutiles de la table destinataire"
+      changes:
+        - dropColumn:
+            tableName: destinataire
+            columnName: colis_id
+        - dropColumn:
+            tableName: destinataire
+            columnName: client_expediteur_id
+      rollback:
+        - addColumn:
+            tableName: destinataire
+            columns:
+              - column:
+                  name: colis_id
+                  type: char(36)
+              - column:
+                  name: client_expediteur_id
+                  type: char(36)
+
+  - changeSet:
+      id: 2-drop-unnecessary-columns-zone
+      author: system
+      comment: "Supprimer les colonnes inutiles de la table zone"
+      changes:
+        - dropColumn:
+            tableName: zone
+            columnName: colis_id
+        - dropColumn:
+            tableName: zone
+            columnName: client_expediteur_id
+      rollback:
+        - addColumn:
+            tableName: zone
+            columns:
+              - column:
+                  name: colis_id
+                  type: char(36)
+              - column:
+                  name: client_expediteur_id
+                  type: char(36)
+
+  - changeSet:
+      id: 3-update-produit-table
+      author: system
+      comment: "Ajouter description et quantite, supprimer client_expediteur_id de la table produit"
+      changes:
+        - addColumn:
+            tableName: produit
+            columns:
+              - column:
+                  name: description
+                  type: varchar(500)
+                  remarks: "Description du produit"
+              - column:
+                  name: quantite
+                  type: int
+                  defaultValue: 1
+                  remarks: "Quantité du produit"
+                  constraints:
+                    nullable: false
+        - dropColumn:
+            tableName: produit
+            columnName: client_expediteur_id
+      rollback:
+        - dropColumn:
+            tableName: produit
+            columnName: description
+        - dropColumn:
+            tableName: produit
+            columnName: quantite
+        - addColumn:
+            tableName: produit
+            columns:
+              - column:
+                  name: client_expediteur_id
+                  type: char(36)
+
+  - changeSet:
+      id: 4-add-foreign-key-constraints
+      author: system
+      comment: "Ajouter les contraintes de clés étrangères"
+      changes:
+        - addForeignKeyConstraint:
+            baseTableName: colis
+            baseColumnNames: destinataire_id
+            constraintName: fk_colis_destinataire
+            referencedTableName: destinataire
+            referencedColumnNames: id
+            onDelete: SET NULL
+            onUpdate: CASCADE
+        - addForeignKeyConstraint:
+            baseTableName: colis
+            baseColumnNames: zone_id
+            constraintName: fk_colis_zone
+            referencedTableName: zone
+            referencedColumnNames: id
+            onDelete: SET NULL
+            onUpdate: CASCADE
+        - addForeignKeyConstraint:
+            baseTableName: colis
+            baseColumnNames: client_expediteur_id
+            constraintName: fk_colis_client_expediteur
+            referencedTableName: client_expediteur
+            referencedColumnNames: id
+            onDelete: SET NULL
+            onUpdate: CASCADE
+        - addForeignKeyConstraint:
+            baseTableName: produit
+            baseColumnNames: colis_id
+            constraintName: fk_produit_colis
+            referencedTableName: colis
+            referencedColumnNames: id
+            onDelete: CASCADE
+            onUpdate: CASCADE
+      rollback:
+        - dropForeignKeyConstraint:
+            baseTableName: colis
+            constraintName: fk_colis_destinataire
+        - dropForeignKeyConstraint:
+            baseTableName: colis
+            constraintName: fk_colis_zone
+        - dropForeignKeyConstraint:
+            baseTableName: colis
+            constraintName: fk_colis_client_expediteur
+        - dropForeignKeyConstraint:
+            baseTableName: produit
+            constraintName: fk_produit_colis
+
+  - changeSet:
+      id: 5-add-indexes
+      author: system
+      comment: "Ajouter des index pour améliorer les performances"
+      changes:
+        - createIndex:
+            tableName: produit
+            indexName: idx_produit_colis
+            columns:
+              - column:
+                  name: colis_id
+        - createIndex:
+            tableName: destinataire
+            indexName: idx_destinataire_telephone
+            columns:
+              - column:
+                  name: telephone
+        - createIndex:
+            tableName: zone
+            indexName: idx_zone_code_postal
+            columns:
+              - column:
+                  name: code_postal
+      rollback:
+        - dropIndex:
+            tableName: produit
+            indexName: idx_produit_colis
+        - dropIndex:
+            tableName: destinataire
+            indexName: idx_destinataire_telephone
+        - dropIndex:
+            tableName: zone
+            indexName: idx_zone_code_postal

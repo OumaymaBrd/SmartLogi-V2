@@ -1,0 +1,59 @@
+databaseChangeLog:
+  - changeSet:
+      id: 1-create-security-tables
+      author: system
+      changes:
+        # Table USERS
+        - createTable:
+            tableName: users
+            columns:
+              - column: { name: id, type: BIGINT, autoIncrement: true, constraints: { primaryKey: true, nullable: false } }
+              - column: { name: username, type: VARCHAR(50), constraints: { nullable: false, unique: true } }
+              - column: { name: email, type: VARCHAR(100), constraints: { nullable: false, unique: true } }
+              - column: { name: password, type: VARCHAR(255), constraints: { nullable: false } }
+              - column: { name: role_id, type: CHAR(36) }
+              - column: { name: is_active, type: BOOLEAN, defaultValueBoolean: true }
+              - column: { name: created_at, type: TIMESTAMP, defaultValueComputed: CURRENT_TIMESTAMP }
+
+        # Table ROLES
+        - createTable:
+            tableName: roles
+            columns:
+              - column: { name: id, type: CHAR(36), constraints: { primaryKey: true, nullable: false } }
+              - column: { name: name, type: VARCHAR(100), constraints: { unique: true, nullable: false } }
+              - column: { name: description, type: VARCHAR(500) }
+
+        # Table PERMISSIONS
+        - createTable:
+            tableName: permissions
+            columns:
+              - column: { name: id, type: CHAR(36), constraints: { primaryKey: true, nullable: false } }
+              - column: { name: name, type: VARCHAR(100), constraints: { unique: true, nullable: false } }
+              - column: { name: category, type: VARCHAR(50), constraints: { nullable: false } }
+              - column: { name: description, type: VARCHAR(255) }
+              - column: { name: created_at, type: TIMESTAMP, defaultValueComputed: CURRENT_TIMESTAMP }
+
+        # Pivot ROLE_PERMISSIONS (Permissions d'un groupe)
+        - createTable:
+            tableName: role_permissions
+            columns:
+              - column: { name: role_id, type: CHAR(36), constraints: { nullable: false } }
+              - column: { name: permission_id, type: CHAR(36), constraints: { nullable: false } }
+        - addPrimaryKey: { tableName: role_permissions, columnNames: "role_id, permission_id" }
+
+        # Pivot USER_PERMISSIONS (Permissions spécifiques à un individu)
+        - createTable:
+            tableName: user_permissions
+            columns:
+              - column: { name: user_id, type: BIGINT, constraints: { nullable: false } }
+              - column: { name: permission_id, type: CHAR(36), constraints: { nullable: false } }
+        - addPrimaryKey: { tableName: user_permissions, columnNames: "user_id, permission_id" }
+
+  - changeSet:
+      id: 2-add-foreign-keys
+      author: system
+      changes:
+        - addForeignKeyConstraint: { baseTableName: users, baseColumnNames: role_id, referencedTableName: roles, referencedColumnNames: id, constraintName: fk_users_role }
+        - addForeignKeyConstraint: { baseTableName: role_permissions, baseColumnNames: role_id, referencedTableName: roles, referencedColumnNames: id, constraintName: fk_rp_role }
+        - addForeignKeyConstraint: { baseTableName: role_permissions, baseColumnNames: permission_id, referencedTableName: permissions, referencedColumnNames: id, constraintName: fk_rp_perm }
+        - addForeignKeyConstraint: { baseTableName: user_permissions, baseColumnNames: user_id, referencedTableName: users, referencedColumnNames: id, constraintName: fk_up_user }

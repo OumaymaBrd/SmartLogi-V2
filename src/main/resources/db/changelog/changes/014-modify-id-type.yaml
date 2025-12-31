@@ -1,0 +1,11 @@
+databaseChangeLog:
+  - changeSet:
+      id: 012-modify-id-type
+      author: oumaymabrd
+      changes:
+        - modifyDataType:
+            tableName: produit
+            columnName: id
+            newDataType: char(36)
+
+

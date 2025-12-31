@@ -1,0 +1,86 @@
+databaseChangeLog:
+  - changeSet:
+      id: remove-produit-categorie-column
+      author: system
+      changes:
+        - dropColumn:
+            tableName: produit
+            columnName: categorie
+      rollback:
+        - addColumn:
+            tableName: produit
+            columns:
+              - column:
+                  name: categorie
+                  type: varchar(100)
+                  constraints:
+                    nullable: false
+
+  - changeSet:
+      id: remove-produit-poids-column
+      author: system
+      changes:
+        - dropColumn:
+            tableName: produit
+            columnName: poids
+      rollback:
+        - addColumn:
+            tableName: produit
+            columns:
+              - column:
+                  name: poids
+                  type: decimal(10,2)
+
+  - changeSet:
+      id: remove-produit-prix-column
+      author: system
+      changes:
+        - dropColumn:
+            tableName: produit
+            columnName: prix
+      rollback:
+        - addColumn:
+            tableName: produit
+            columns:
+              - column:
+                  name: prix
+                  type: decimal(10,2)
+
+  - changeSet:
+      id: remove-produit-client-expediteur-fk
+      author: system
+      preConditions:
+        - onFail: MARK_RAN
+        - foreignKeyConstraintExists:
+            foreignKeyName: fk_produit_client_expediteur
+      changes:
+        - dropForeignKeyConstraint:
+            baseTableName: produit
+            constraintName: fk_produit_client_expediteur
+      rollback:
+        - addForeignKeyConstraint:
+            baseTableName: produit
+            baseColumnNames: client_expediteur_id
+            referencedTableName: client_expediteur
+            referencedColumnNames: id
+            constraintName: fk_produit_client_expediteur
+
+  - changeSet:
+      id: remove-produit-client-expediteur-id-column
+      author: system
+      preConditions:
+        - onFail: MARK_RAN
+        - columnExists:
+            tableName: produit
+            columnName: client_expediteur_id
+      changes:
+        - dropColumn:
+            tableName: produit
+            columnName: client_expediteur_id
+      rollback:
+        - addColumn:
+            tableName: produit
+            columns:
+              - column:
+                  name: client_expediteur_id
+                  type: char(36)

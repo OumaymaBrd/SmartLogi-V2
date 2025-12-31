@@ -1,0 +1,57 @@
+databaseChangeLog:
+  - changeSet:
+      id: 024-alter-colis-add-columns
+      author: oumaymabrd
+      preConditions:
+        onFail: CONTINUE
+        not:
+          columnExists:
+            tableName: colis
+            columnName: numero_colis
+      changes:
+        - addColumn:
+            tableName: colis
+            columns:
+              - column:
+                  name: numero_colis
+                  type: varchar(50)
+                  constraints:
+                    nullable: false
+  - changeSet:
+      id: 024b-add-date-creation
+      author: oumaymabrd
+      preConditions:
+        onFail: CONTINUE
+        not:
+          columnExists:
+            tableName: colis
+            columnName: date_creation
+      changes:
+        - addColumn:
+            tableName: colis
+            columns:
+              - column:
+                  name: date_creation
+                  type: datetime
+                  defaultValueComputed: CURRENT_TIMESTAMP
+                  constraints:
+                    nullable: false
+  - changeSet:
+      id: 024c-add-livreur-zone
+      author: oumaymabrd
+      preConditions:
+        onFail: CONTINUE
+        not:
+          columnExists:
+            tableName: colis
+            columnName: livreur_id
+      changes:
+        - addColumn:
+            tableName: colis
+            columns:
+              - column:
+                  name: livreur_id
+                  type: bigint
+              - column:
+                  name: zone_id
+                  type: bigint

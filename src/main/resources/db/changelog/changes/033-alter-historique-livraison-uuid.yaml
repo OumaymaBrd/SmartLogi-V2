@@ -1,0 +1,46 @@
+databaseChangeLog:
+  - changeSet:
+      id: 033-alter-historique-livraison-uuid
+      author: smartlogi
+      preConditions:
+        onFail: CONTINUE
+        preConditions:
+          - not:
+              columnExists:
+                tableName: historique_livraison
+                columnName: colis_id
+          - not:
+              columnExists:
+                tableName: historique_livraison
+                columnName: livreur_id
+      changes:
+        # Ajouter colonne si elle n'existe pas
+        - addColumn:
+            tableName: historique_livraison
+            columns:
+              - column:
+                  name: colis_id
+                  type: VARCHAR(36)
+              - column:
+                  name: livreur_id
+                  type: VARCHAR(36)
+
+        # Modifier le type des colonnes si elles existent déjà
+        - modifyDataType:
+            tableName: historique_livraison
+            columnName: colis_id
+            newDataType: VARCHAR(36)
+        - modifyDataType:
+            tableName: historique_livraison
+            columnName: livreur_id
+            newDataType: VARCHAR(36)
+
+      rollback:
+        - modifyDataType:
+            tableName: historique_livraison
+            columnName: colis_id
+            newDataType: INT
+        - modifyDataType:
+            tableName: historique_livraison
+            columnName: livreur_id
+            newDataType: INT

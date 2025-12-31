@@ -1,0 +1,33 @@
+databaseChangeLog:
+  - changeSet:
+      id: 005-create-produit
+      author: smartlogi
+      changes:
+        - createTable:
+            tableName: produit
+            columns:
+              - column:
+                  name: id
+                  type: BIGINT
+                  autoIncrement: true
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: nom
+                  type: VARCHAR(200)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: categorie
+                  type: VARCHAR(100)
+              - column:
+                  name: poids
+                  type: DOUBLE
+                  constraints:
+                    nullable: false
+              - column:
+                  name: prix
+                  type: DOUBLE
+                  constraints:
+                    nullable: false

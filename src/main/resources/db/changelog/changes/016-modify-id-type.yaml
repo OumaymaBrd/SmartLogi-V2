@@ -1,0 +1,11 @@
+databaseChangeLog:
+  - changeSet:
+      id: 015-modify-id-type
+      author: oumaymabrd
+      changes:
+        - modifyDataType:
+            tableName: colis_produit
+            columnName: id
+            newDataType: char(36)
+
+

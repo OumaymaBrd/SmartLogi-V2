@@ -1,0 +1,42 @@
+databaseChangeLog:
+  - changeSet:
+      id: 004-create-livreur
+      author: smartlogi
+      changes:
+        - createTable:
+            tableName: livreur
+            columns:
+              - column:
+                  name: id
+                  type: BIGINT
+                  autoIncrement: true
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: nom
+                  type: VARCHAR(100)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: prenom
+                  type: VARCHAR(100)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: telephone
+                  type: VARCHAR(20)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: vehicule
+                  type: VARCHAR(50)
+              - column:
+                  name: zone_id
+                  type: BIGINT
+        - addForeignKeyConstraint:
+            baseTableName: livreur
+            baseColumnNames: zone_id
+            referencedTableName: zone
+            referencedColumnNames: id
+            constraintName: fk_livreur_zone

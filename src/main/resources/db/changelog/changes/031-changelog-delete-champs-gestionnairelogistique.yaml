@@ -1,0 +1,15 @@
+databaseChangeLog:
+  - changeSet:
+      id: 031-changelog-delete-champs-gestionnairelogistique
+      author: oumaymaBrd
+      preConditions:
+        - onFail: MARK_RAN
+        - tableExists:
+            tableName: gestionnaire_logistique
+      changes:
+        - dropColumn:
+            columnName: date_creation
+            tableName: gestionnaire_logistique
+        - dropColumn:
+            columnName: actif
+            tableName: gestionnaire_logistique

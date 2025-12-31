@@ -1,0 +1,53 @@
+databaseChangeLog:
+  - changeSet:
+      id: fix-colis-nullable-columns-1
+      author: system
+      changes:
+        - dropNotNullConstraint:
+            tableName: colis
+            columnName: description
+            columnDataType: varchar(255)
+
+        - dropNotNullConstraint:
+            tableName: colis
+            columnName: poids
+            columnDataType: decimal(10,2)
+
+      rollback:
+        - addNotNullConstraint:
+            tableName: colis
+            columnName: description
+            columnDataType: varchar(255)
+
+        - addNotNullConstraint:
+            tableName: colis
+            columnName: poids
+            columnDataType: decimal(10,2)
+
+  - changeSet:
+      id: fix-colis-nullable-columns-2
+      author: system
+      comment: "Optionally drop description and poids columns if not needed"
+      changes:
+        - dropColumn:
+            tableName: colis
+            columnName: description
+
+        - dropColumn:
+            tableName: colis
+            columnName: poids
+
+      rollback:
+        - addColumn:
+            tableName: colis
+            columns:
+              - column:
+                  name: description
+                  type: varchar(255)
+
+        - addColumn:
+            tableName: colis
+            columns:
+              - column:
+                  name: poids
+                  type: decimal(10,2)
