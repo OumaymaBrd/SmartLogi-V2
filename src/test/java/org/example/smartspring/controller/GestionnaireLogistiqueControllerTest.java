@@ -26,7 +26,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @WebMvcTest(GestionnaireLogistiqueController.class)
-@WithMockUser // Indispensable pour l'authentification
+@WithMockUser
 class GestionnaireLogistiqueControllerTest {
 
     @Autowired
@@ -56,10 +56,13 @@ class GestionnaireLogistiqueControllerTest {
     void setUp() {
         dto = AddGestionnaireLogistqueDTO.builder()
                 .nom("Oumaima").prenom("B").email("oumaima@example.com").telephone("0600000000").build();
+
         gDto = GestionnaireLogistiqueDTO.builder()
-                .id("1").nom(dto.getNom()).prenom(dto.getPrenom()).email(dto.getEmail()).telephone(dto.getTelephone()).build();
+                .id("1").nom("Oumaima").prenom("B").email("oumaima@example.com").telephone("0600000000").build();
+
         updateColisDTO = new UpdateColisDTO();
         updateColisDTO.setLivreurId("livreur1");
+
         colis = new Colis();
         colis.setId("C123");
     }
@@ -67,8 +70,9 @@ class GestionnaireLogistiqueControllerTest {
     @Test
     void testCreate_ShouldReturnCreated() throws Exception {
         Mockito.when(gestionnaireService.create(any())).thenReturn(gDto);
+
         mockMvc.perform(post("/gestionnairelogistique")
-                        .with(csrf()) // Correction 403
+                        .with(csrf())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(dto)))
                 .andExpect(status().isCreated());
@@ -77,7 +81,7 @@ class GestionnaireLogistiqueControllerTest {
     @Test
     void testAffecterLivreur_ShouldReturnBadRequest_WhenNoLivreurGiven() throws Exception {
         mockMvc.perform(put("/gestionnairelogistique/affecter-livreur")
-                        .with(csrf()) // Correction 403
+                        .with(csrf())
                         .param("numero_colis", "C123")
                         .param("idGestionnaire", "1"))
                 .andExpect(status().isBadRequest());
@@ -86,8 +90,9 @@ class GestionnaireLogistiqueControllerTest {
     @Test
     void testUpdateColis_withLivreurOnly_ShouldReturnOK() throws Exception {
         Mockito.when(colisService.updateColis(any(), eq("C123"))).thenReturn(colis);
+
         mockMvc.perform(put("/gestionnairelogistique/updateStatutColis/C123")
-                        .with(csrf()) // Correction 403
+                        .with(csrf())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(updateColisDTO)))
                 .andExpect(status().isOk());

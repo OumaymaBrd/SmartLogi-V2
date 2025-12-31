@@ -13,6 +13,7 @@ import org.springframework.data.domain.*;
 import org.springframework.http.MediaType;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.web.servlet.MockMvc;
+
 import java.util.List;
 
 import static org.mockito.ArgumentMatchers.*;
@@ -27,18 +28,22 @@ class DestinataireControllerTest {
 
     @Autowired private MockMvc mockMvc;
     @Autowired private ObjectMapper objectMapper;
+
     @MockBean private DestinataireService destinataireService;
     @MockBean private JwtService jwtService;
     @MockBean private CustomUserDetailsService customUserDetailsService;
 
     @Test
     void testCreateDestinataire() throws Exception {
-        AddDestinataireDTO input = AddDestinataireDTO.builder().nom("Oumayma").build();
+        AddDestinataireDTO input = AddDestinataireDTO.builder()
+                .nom("Oumayma").prenom("Bramid").adresse("Settat").telephone("0612345678").email("test@test.com").ville("Settat")
+                .build();
+
         DestinataireDTO output = DestinataireDTO.builder().nom("Oumayma").build();
         when(destinataireService.createDestinataire(any())).thenReturn(output);
 
         mockMvc.perform(post("/destinataires")
-                        .with(csrf()) // Correction 403
+                        .with(csrf())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(input)))
                 .andExpect(status().isCreated());
@@ -48,24 +53,27 @@ class DestinataireControllerTest {
     void testGetAllDestinataires() throws Exception {
         Page<DestinataireDTO> page = new PageImpl<>(List.of(new DestinataireDTO()));
         when(destinataireService.getAllDestinataires(any())).thenReturn(page);
+
         mockMvc.perform(get("/destinataires")).andExpect(status().isOk());
     }
 
     @Test
     void testUpdateDestinataire() throws Exception {
-        DestinataireDTO result = new DestinataireDTO();
-        when(destinataireService.updateDestinataire(anyString(), any())).thenReturn(result);
+        UpdateDestinataireDTO update = UpdateDestinataireDTO.builder()
+                .nom("Ouma").prenom("Br").telephone("0612345678").email("test@test.com").adresse("Adresse").build();
+
+        when(destinataireService.updateDestinataire(anyString(), any())).thenReturn(new DestinataireDTO());
+
         mockMvc.perform(put("/destinataires/111")
-                        .with(csrf()) // Correction 403
+                        .with(csrf())
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(new UpdateDestinataireDTO())))
+                        .content(objectMapper.writeValueAsString(update)))
                 .andExpect(status().isOk());
     }
 
     @Test
     void testDeleteDestinataire() throws Exception {
         doNothing().when(destinataireService).deleteDestinataire(anyString());
-        mockMvc.perform(delete("/destinataires/222").with(csrf())) // Correction 403
-                .andExpect(status().isNoContent());
+        mockMvc.perform(delete("/destinataires/222").with(csrf())).andExpect(status().isNoContent());
     }
 }
