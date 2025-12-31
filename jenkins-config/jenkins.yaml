@@ -1,0 +1,20 @@
+jenkins:
+  systemMessage: "Pipeline SmartLogi-V2 prêt"
+
+jobs:
+  - script: >
+      pipelineJob('SmartLogi-V2-Pipeline') {
+        definition {
+          cpsScm {
+            scm {
+              git {
+                remote {
+                  url('https://github.com/OumaymaBrd/SmartLogi-V2.git')
+                }
+                branches('*/master')
+              }
+            }
+            scriptPath('Jenkinsfile')
+          }
+        }
+      }

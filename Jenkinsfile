@@ -2,56 +2,49 @@ pipeline {
     agent any
 
     environment {
-        // Variables pour la connexion à la base de données Docker
+        // Paramètres de connexion au service postgres-db défini dans docker-compose
         DB_URL = "jdbc:postgresql://postgres-db:5432/smartSpring"
         DB_USER = "admin"
         DB_PASS = "admin_password"
     }
 
     stages {
-        stage('Nettoyage & Préparation') {
+        stage('Preparation') {
             steps {
-                echo 'Préparation de l\'environnement...'
-                // Donne les droits d'exécution au script Maven Wrapper
+                echo 'Vérification des fichiers...'
+                // Affiche les fichiers pour confirmer que mvnw est bien présent
+                sh 'ls -la'
                 sh 'chmod +x mvnw'
             }
         }
 
-        stage('Compilation & Tests Unitaires') {
+        stage('Tests Maven') {
             steps {
-                echo 'Lancement des tests Maven...'
-                // Exécution des tests en injectant les paramètres de la DB Docker
+                echo 'Lancement des tests unitaires...'
+                // On injecte les paramètres de la base de données Docker
                 sh "./mvnw clean test -Dspring.datasource.url=${env.DB_URL} -Dspring.datasource.username=${env.DB_USER} -Dspring.datasource.password=${env.DB_PASS}"
             }
         }
 
-        stage('Construction de l\'image Docker') {
+        stage('Build Image Docker') {
             steps {
-                echo 'Construction de l\'image Docker de l\'application...'
-                // Construit l'image locale en utilisant le Dockerfile présent
+                echo 'Création de l\'image de l\'application...'
+                // Utilise le Dockerfile à la racine
                 sh 'docker build -t smart-spring-app:latest .'
-            }
-        }
-
-        stage('Déploiement (Mise à jour)') {
-            steps {
-                echo 'Redémarrage du service backend...'
-                // Met à jour le conteneur backend sans toucher à la base de données
-                sh 'docker-compose up -d --no-deps app-backend'
             }
         }
     }
 
     post {
+        always {
+            // Publie les résultats des tests dans l'interface Jenkins
+            junit '**/target/surefire-reports/*.xml'
+        }
         success {
-            echo '✅ Pipeline terminé avec succès ! Votre application est à jour.'
+            echo ' Pipeline terminé avec succès !'
         }
         failure {
-            echo '❌ Le pipeline a échoué. Vérifiez les erreurs ci-dessus.'
-        }
-        always {
-            // Publication des rapports de tests JUnit dans Jenkins
-            junit '**/target/surefire-reports/*.xml'
+            echo ' Le pipeline a échoué. Vérifiez les fichiers manquants dans Git.'
         }
     }
 }
