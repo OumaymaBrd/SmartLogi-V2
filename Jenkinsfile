@@ -8,6 +8,9 @@ pipeline {
         SPRING_DATASOURCE_USERNAME = "admin"
         SPRING_DATASOURCE_PASSWORD = "admin_password"
         MAVEN_OPTS = "-Dorg.jenkinsci.plugins.durabletask.BourneShellScript.HEARTBEAT_CHECK_INTERVAL=300"
+        SONAR_HOST_URL = "http://sonarqube:9000"
+        SONAR_LOGIN = "admin"
+        SONAR_PASSWORD = "admin123"
     }
 
     stages {
@@ -56,6 +59,54 @@ pipeline {
             }
         }
 
+        stage('Code Coverage - JaCoCo') {
+            steps {
+                echo '📊 Génération du rapport de couverture de code JaCoCo...'
+                sh './mvnw jacoco:report'
+            }
+            post {
+                always {
+                    // Publication du rapport JaCoCo dans Jenkins
+                    jacoco(
+                        execPattern: '**/target/jacoco.exec',
+                        classPattern: '**/target/classes',
+                        sourcePattern: '**/src/main/java',
+                        exclusionPattern: '**/test/**'
+                    )
+                }
+            }
+        }
+
+        stage('Code Quality - SonarQube') {
+            steps {
+                echo '🔍 Analyse de la qualité du code avec SonarQube...'
+                script {
+                    // Attendre que SonarQube soit prêt
+                    sh '''
+                    echo "Vérification de la disponibilité de SonarQube..."
+                    for i in {1..30}; do
+                        if curl -s http://sonarqube:9000/api/system/status | grep -q '"status":"UP"'; then
+                            echo "SonarQube est prêt!"
+                            break
+                        fi
+                        echo "Attente de SonarQube... ($i/30)"
+                        sleep 10
+                    done
+                    '''
+
+                    sh """
+                    ./mvnw sonar:sonar \
+                        -Dsonar.host.url=${SONAR_HOST_URL} \
+                        -Dsonar.login=${SONAR_LOGIN} \
+                        -Dsonar.password=${SONAR_PASSWORD} \
+                        -Dsonar.projectKey=SmartLogi-V2 \
+                        -Dsonar.projectName=SmartLogi-V2 \
+                        -Dsonar.coverage.jacoco.xmlReportPaths=target/site/jacoco/jacoco.xml
+                    """
+                }
+            }
+        }
+
         stage('Build Docker Image') {
             steps {
                 echo '📦 Construction de l\'image Docker Backend...'
@@ -75,6 +126,17 @@ pipeline {
         always {
             echo '📊 Traitement des rapports de tests...'
             junit testResults: '**/target/surefire-reports/*.xml', allowEmptyResults: true
+
+            // Publication du rapport JaCoCo dans Jenkins
+            publishHTML([
+                allowMissing: false,
+                alwaysLinkToLastBuild: true,
+                keepAll: true,
+                reportDir: 'target/site/jacoco',
+                reportFiles: 'index.html',
+                reportName: 'JaCoCo Coverage Report',
+                reportTitles: 'Code Coverage'
+            ])
 
             echo '🧹 Arrêt de la base de données de test...'
             sh """
