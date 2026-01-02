@@ -1,0 +1,8 @@
+git:5.2.2
+workflow-aggregator:596.v8c21c963d92d
+sonar:2.17.2
+htmlpublisher:1.32
+jacoco:3.3.6
+configuration-as-code:1810.v9b_c30a_249a_4c
+credentials:1371.vfee6b_095f0a_3
+credentials-binding:681.vf91669a_32e45

@@ -1,5 +1,5 @@
 services:
-  # --- Base de Données ---
+  # --- Base de Données PostgreSQL pour l'application ---
   postgres-db:
     image: postgres:15
     container_name: postgres-db
@@ -8,16 +8,33 @@ services:
       - POSTGRES_DB=smartSpring
       - POSTGRES_USER=admin
       - POSTGRES_PASSWORD=admin_password
-      - POSTGRES_MULTIPLE_DATABASES=smartSpring,sonarqube
     ports:
       - "5432:5432"
     volumes:
       - postgres-data:/var/lib/postgresql/data
-      - ./scripts/init-postgres.sh:/docker-entrypoint-initdb.d/init-postgres.sh
     networks:
       - smart-network
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U admin"]
+      test: ["CMD-SHELL", "pg_isready -U admin -d smartSpring"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # --- Base de Données PostgreSQL pour SonarQube ---
+  sonarqube-db:
+    image: postgres:15
+    container_name: sonarqube-db
+    restart: always
+    environment:
+      - POSTGRES_DB=sonarqube
+      - POSTGRES_USER=sonar
+      - POSTGRES_PASSWORD=sonar_password
+    volumes:
+      - sonarqube-db-data:/var/lib/postgresql/data
+    networks:
+      - smart-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U sonar -d sonarqube"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -30,9 +47,9 @@ services:
       - "9000:9000"
     environment:
       - SONAR_ES_BOOTSTRAP_CHECKS_DISABLE=true
-      - SONAR_JDBC_URL=jdbc:postgresql://postgres-db:5432/sonarqube
-      - SONAR_JDBC_USERNAME=admin
-      - SONAR_JDBC_PASSWORD=admin_password
+      - SONAR_JDBC_URL=jdbc:postgresql://sonarqube-db:5432/sonarqube
+      - SONAR_JDBC_USERNAME=sonar
+      - SONAR_JDBC_PASSWORD=sonar_password
     volumes:
       - sonarqube-data:/opt/sonarqube/data
       - sonarqube-logs:/opt/sonarqube/logs
@@ -40,15 +57,18 @@ services:
     networks:
       - smart-network
     depends_on:
-      postgres-db:
+      sonarqube-db:
         condition: service_healthy
     healthcheck:
-      test: ["CMD-SHELL", "curl -f http://localhost:9000/api/system/status || exit 1"]
+      test: ["CMD-SHELL", "wget --no-verbose --tries=1 --spider http://localhost:9000/api/system/status || exit 1"]
       interval: 30s
       timeout: 10s
       retries: 5
-      start_period: 60s
-
+      start_period: 120s
+    ulimits:
+      nofile:
+        soft: 65536
+        hard: 65536
 
   # --- Application Backend ---
   app-backend:
@@ -70,22 +90,33 @@ services:
     networks:
       - smart-network
 
-  # --- Jenkins (Auto-Configuré) ---
+  # --- Jenkins ---
   jenkins:
-    image: jenkins/jenkins:lts
+    image: jenkins/jenkins:lts-jdk17
     container_name: jenkins
-    privileged: true
     user: root
     ports:
       - "8080:8080"
       - "50000:50000"
     volumes:
       - jenkins-data:/var/jenkins_home
-      - /var/run/docker.sock:/var/run/docker.sock
-      - ./jenkins-config:/var/jenkins_config
+      - ./jenkins-config:/var/jenkins_config:ro
     environment:
       - CASC_JENKINS_CONFIG=/var/jenkins_config/jenkins.yaml
       - JAVA_OPTS=-Djenkins.install.runSetupWizard=false -Dorg.jenkinsci.plugins.durabletask.BourneShellScript.HEARTBEAT_CHECK_INTERVAL=300
+    entrypoint: /bin/bash
+    command:
+      - -c
+      - |
+        echo "=== Installation des plugins Jenkins ==="
+        if [ -f /var/jenkins_config/plugins.txt ]; then
+          jenkins-plugin-cli --plugin-file /var/jenkins_config/plugins.txt || echo "Avertissement: certains plugins n'ont pas pu être installés"
+        else
+          echo "Fichier plugins.txt non trouvé, installation des plugins essentiels..."
+          jenkins-plugin-cli --plugins git workflow-aggregator sonar jacoco htmlpublisher || true
+        fi
+        echo "=== Démarrage de Jenkins ==="
+        exec /usr/local/bin/jenkins.sh
     networks:
       - smart-network
     depends_on:
@@ -99,6 +130,7 @@ networks:
 
 volumes:
   postgres-data:
+  sonarqube-db-data:
   jenkins-data:
   sonarqube-data:
   sonarqube-logs:
