@@ -40,7 +40,7 @@ services:
     networks:
       - smart-network
 
-  # --- Jenkins (Auto-Configuré) ---
+  # --- Jenkins ---
   jenkins:
     image: jenkins/jenkins:lts
     container_name: jenkins
