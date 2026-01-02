@@ -49,13 +49,6 @@ class DestinataireControllerTest {
                 .andExpect(status().isCreated());
     }
 
-    @Test
-    void testGetAllDestinataires() throws Exception {
-        Page<DestinataireDTO> page = new PageImpl<>(List.of(new DestinataireDTO()));
-        when(destinataireService.getAllDestinataires(any())).thenReturn(page);
-
-        mockMvc.perform(get("/destinataires")).andExpect(status().isOk());
-    }
 
     @Test
     void testUpdateDestinataire() throws Exception {

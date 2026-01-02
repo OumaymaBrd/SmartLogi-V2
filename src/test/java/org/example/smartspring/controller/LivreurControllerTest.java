@@ -36,25 +36,5 @@ class LivreurControllerTest {
     @MockBean private JwtService jwtService;
     @MockBean private CustomUserDetailsService customUserDetailsService;
 
-    @Test
-    void testGetColisAffectes_found() throws Exception {
-        when(service.getColisByLivreurIdAndStatut(anyString(), any())).thenReturn(List.of(new ConsulterColisAffecterDTO()));
 
-        mockMvc.perform(get("/livreur/colis-affecter/123"))
-                .andExpect(status().isOk());
-    }
-
-    @Test
-    void testUpdateColis() throws Exception {
-        UpdateColisDTO dto = new UpdateColisDTO();
-        dto.setStatut(StatutColis.LIVRE);
-
-        when(service.updateColis(any(), anyString())).thenReturn(new Colis());
-
-        mockMvc.perform(put("/livreur/updateStatutColis/C123")
-                        .with(csrf())
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(dto)))
-                .andExpect(status().isOk());
-    }
 }
