@@ -49,18 +49,6 @@ services:
       retries: 5
       start_period: 60s
 
-  sonarqube-init:
-    image: curlimages/curl:latest
-    container_name: sonarqube-init
-    networks:
-      - smart-network
-    depends_on:
-      sonarqube:
-        condition: service_healthy
-    volumes:
-      - ./scripts/init-sonarqube.sh:/scripts/init-sonarqube.sh
-    command: ["/bin/sh", "/scripts/init-sonarqube.sh"]
-    restart: "no"
 
   # --- Application Backend ---
   app-backend:

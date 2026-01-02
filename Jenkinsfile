@@ -9,7 +9,6 @@ pipeline {
         SPRING_DATASOURCE_PASSWORD = "admin_password"
         MAVEN_OPTS = "-Dorg.jenkinsci.plugins.durabletask.BourneShellScript.HEARTBEAT_CHECK_INTERVAL=300"
         SONAR_HOST_URL = "http://sonarqube:9000"
-        SONAR_TOKEN = credentials('sonarqube-token')
     }
 
     stages {
@@ -116,7 +115,8 @@ pipeline {
                     sh """
                     ./mvnw sonar:sonar \
                         -Dsonar.host.url=${SONAR_HOST_URL} \
-                        -Dsonar.token=${SONAR_TOKEN} \
+                        -Dsonar.login=admin \
+                        -Dsonar.password=admin \
                         -Dsonar.projectKey=smartlogi-v2 \
                         -Dsonar.projectName='SmartLogi-V2' \
                         -Dsonar.coverage.jacoco.xmlReportPaths=target/site/jacoco/jacoco.xml
@@ -168,6 +168,7 @@ pipeline {
             echo '📊 Consultez les rapports:'
             echo '   - JaCoCo: Jenkins → JaCoCo Coverage Report'
             echo '   - SonarQube: http://localhost:9000'
+            echo '   - Projet: smartlogi-v2'
         }
         failure {
             echo '❌ ÉCHEC DU PIPELINE. Vérifiez les logs Maven ou Docker.'
