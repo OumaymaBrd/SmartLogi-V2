@@ -4,7 +4,7 @@ pipeline {
     environment {
         GOOGLE_CLIENT_ID = "dummy"
         GOOGLE_CLIENT_SECRET = "dummy"
-        SPRING_DATASOURCE_URL = "jdbc:postgresql://localhost:5432/smartSpring"
+        SPRING_DATASOURCE_URL = "jdbc:postgresql://localhost:5433/smartSpring"
         SPRING_DATASOURCE_USERNAME = "admin"
         SPRING_DATASOURCE_PASSWORD = "admin_password"
     }
@@ -35,7 +35,7 @@ pipeline {
                   -e POSTGRES_DB=smartSpring \
                   -e POSTGRES_USER=admin \
                   -e POSTGRES_PASSWORD=admin_password \
-                  -p 5432:5432 \
+                  -p 5433:5432 \
                   postgres:15
 
                 # Attendre que PostgreSQL soit prêt
@@ -53,7 +53,7 @@ pipeline {
                 echo '🧪 Exécution des tests avec PostgreSQL...'
                 sh """
                 ./mvnw clean test \
-                -Dspring.datasource.url=jdbc:postgresql://localhost:5432/smartSpring \
+                -Dspring.datasource.url=jdbc:postgresql://localhost:5433/smartSpring \
                 -Dspring.datasource.username=admin \
                 -Dspring.datasource.password=admin_password \
                 -Dspring.jpa.hibernate.ddl-auto=create-drop
