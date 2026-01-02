@@ -4,7 +4,7 @@ pipeline {
     environment {
         GOOGLE_CLIENT_ID = "dummy"
         GOOGLE_CLIENT_SECRET = "dummy"
-        SPRING_DATASOURCE_URL = "jdbc:postgresql://localhost:5433/smartSpring"
+        SPRING_DATASOURCE_URL = "jdbc:postgresql://test-postgres:5432/smartSpring"
         SPRING_DATASOURCE_USERNAME = "admin"
         SPRING_DATASOURCE_PASSWORD = "admin_password"
     }
@@ -19,7 +19,7 @@ pipeline {
                 fi
                 chmod +x mvnw
 
-                # Nettoyage des conteneurs de test précédents
+                docker network create jenkins-test-network || true
                 docker stop test-postgres || true
                 docker rm test-postgres || true
                 """
@@ -32,10 +32,10 @@ pipeline {
                 sh """
                 docker run -d \
                   --name test-postgres \
+                  --network jenkins-test-network \
                   -e POSTGRES_DB=smartSpring \
                   -e POSTGRES_USER=admin \
                   -e POSTGRES_PASSWORD=admin_password \
-                  -p 5433:5432 \
                   postgres:15
 
                 # Attendre que PostgreSQL soit prêt
@@ -52,11 +52,19 @@ pipeline {
             steps {
                 echo '🧪 Exécution des tests avec PostgreSQL...'
                 sh """
-                ./mvnw clean test \
-                -Dspring.datasource.url=jdbc:postgresql://localhost:5433/smartSpring \
-                -Dspring.datasource.username=admin \
-                -Dspring.datasource.password=admin_password \
-                -Dspring.jpa.hibernate.ddl-auto=create-drop
+                docker run --rm \
+                  --network jenkins-test-network \
+                  -v \$(pwd):/app \
+                  -w /app \
+                  -e SPRING_DATASOURCE_URL=jdbc:postgresql://test-postgres:5432/smartSpring \
+                  -e SPRING_DATASOURCE_USERNAME=admin \
+                  -e SPRING_DATASOURCE_PASSWORD=admin_password \
+                  maven:3.9-eclipse-temurin-17 \
+                  mvn clean test \
+                    -Dspring.datasource.url=jdbc:postgresql://test-postgres:5432/smartSpring \
+                    -Dspring.datasource.username=admin \
+                    -Dspring.datasource.password=admin_password \
+                    -Dspring.jpa.hibernate.ddl-auto=create-drop
                 """
             }
         }
@@ -80,6 +88,7 @@ pipeline {
                 sh """
                 docker stop test-postgres || true
                 docker rm test-postgres || true
+                docker network rm jenkins-test-network || true
                 """
             }
         }
