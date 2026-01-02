@@ -1,19 +1,19 @@
 FROM eclipse-temurin:17-jdk-jammy AS build
 WORKDIR /app
 
-# Installation de dos2unix pour gérer les fichiers Windows
-RUN apt-get update && apt-get install -y dos2unix
+RUN apt-get update && apt-get install -y dos2unix && rm -rf /var/lib/apt/lists/*
 
 COPY mvnw .
 COPY .mvn .mvn
 COPY pom.xml .
 
-# Correction des scripts
 RUN dos2unix mvnw && chmod +x mvnw
 
-# On saute go-offline qui bloque Jenkins et on passe direct au build
+# Cela permet de mettre en cache les dépendances et accélérer les builds futurs
+RUN ./mvnw dependency:go-offline -B || true
+
 COPY src ./src
-RUN ./mvnw clean package -DskipTests
+RUN ./mvnw clean package -DskipTests -B
 
 # Étape finale (JRE plus légère)
 FROM eclipse-temurin:17-jre-jammy

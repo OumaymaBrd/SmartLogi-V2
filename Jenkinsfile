@@ -2,13 +2,12 @@ pipeline {
     agent any
 
     environment {
-        // Variables dummy pour éviter les erreurs d'initialisation Spring context
         GOOGLE_CLIENT_ID = "dummy"
         GOOGLE_CLIENT_SECRET = "dummy"
-        // Configuration de la DB de test pour Maven
         SPRING_DATASOURCE_URL = "jdbc:postgresql://localhost:5433/smartSpring"
         SPRING_DATASOURCE_USERNAME = "admin"
         SPRING_DATASOURCE_PASSWORD = "admin_password"
+        MAVEN_OPTS = "-Dorg.jenkinsci.plugins.durabletask.BourneShellScript.HEARTBEAT_CHECK_INTERVAL=300"
     }
 
     stages {
@@ -47,8 +46,6 @@ pipeline {
         stage('Tests Maven') {
             steps {
                 echo '🧪 Exécution des tests unitaires...'
-                // Comme vous avez supprimé les méthodes problématiques,
-                // nous n'utilisons plus "ignore failure", le build échouera s'il reste une vraie erreur.
                 sh """
                 ./mvnw clean test \
                     -Dspring.datasource.url=${SPRING_DATASOURCE_URL} \
@@ -62,9 +59,14 @@ pipeline {
         stage('Build Docker Image') {
             steps {
                 echo '📦 Construction de l\'image Docker Backend...'
-                /* On utilise -DskipTests ici car les tests ont déjà été validés
-                   à l'étape précédente du pipeline. Cela gagne du temps. */
-                sh 'docker build -t smart-spring-app-backend:latest .'
+                timeout(time: 20, unit: 'MINUTES') {
+                    sh '''
+                    docker build -t smart-spring-app-backend:latest . 2>&1 | while IFS= read -r line; do
+                        echo "$line"
+                        sleep 0.1
+                    done
+                    '''
+                }
             }
         }
     }
@@ -80,6 +82,7 @@ pipeline {
             docker rm test-postgres || true
             """
         }
+
         success {
             echo '✅ PIPELINE RÉUSSI ! L\'image Docker est prête et les tests sont validés.'
         }

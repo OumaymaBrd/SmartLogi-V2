@@ -14,6 +14,11 @@ services:
       - postgres-data:/var/lib/postgresql/data
     networks:
       - smart-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U admin"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
   # --- Application Backend ---
   app-backend:
@@ -29,7 +34,8 @@ services:
       - GMAIL_USERNAME=oumaymabramid@gmail.com
       - GMAIL_APP_PASSWORD=votre_mot_de_passe_google
     depends_on:
-      - postgres-db
+      postgres-db:
+        condition: service_healthy
     restart: on-failure
     networks:
       - smart-network
@@ -49,7 +55,7 @@ services:
       - ./jenkins-config:/var/jenkins_config
     environment:
       - CASC_JENKINS_CONFIG=/var/jenkins_config/jenkins.yaml
-      - JAVA_OPTS=-Djenkins.install.runSetupWizard=false
+      - JAVA_OPTS=-Djenkins.install.runSetupWizard=false -Dorg.jenkinsci.plugins.durabletask.BourneShellScript.HEARTBEAT_CHECK_INTERVAL=300
     networks:
       - smart-network
     restart: always
