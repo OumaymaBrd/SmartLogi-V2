@@ -76,23 +76,43 @@ pipeline {
             }
         }
 
+        stage('Setup SonarQube Project') {
+            steps {
+                echo '🔧 Vérification/Création du projet dans SonarQube...'
+                script {
+                    sh '''
+                    # Attendre que SonarQube soit prêt
+                    echo "Vérification de la disponibilité de SonarQube..."
+                    for i in {1..30}; do
+                        if curl -s http://sonarqube:9000/api/system/status | grep -q '"status":"UP"'; then
+                            echo "✅ SonarQube est prêt!"
+                            break
+                        fi
+                        echo "   Attente de SonarQube... ($i/30)"
+                        sleep 10
+                    done
+
+                    # Vérifier si le projet existe
+                    PROJECT_EXISTS=$(curl -s -u admin:admin "http://sonarqube:9000/api/projects/search?projects=smartlogi-v2" | grep -c '"key":"smartlogi-v2"' || true)
+
+                    if [ "$PROJECT_EXISTS" -eq 0 ]; then
+                        echo "📝 Création du projet SmartLogi-V2 dans SonarQube..."
+                        curl -s -u admin:admin -X POST "http://sonarqube:9000/api/projects/create" \
+                            -d "project=smartlogi-v2" \
+                            -d "name=SmartLogi-V2"
+                        echo "✅ Projet créé avec succès!"
+                    else
+                        echo "✅ Le projet existe déjà dans SonarQube"
+                    fi
+                    '''
+                }
+            }
+        }
+
         stage('Code Quality - SonarQube') {
             steps {
                 echo '🔍 Analyse de la qualité du code avec SonarQube...'
                 script {
-                    // Attendre que SonarQube soit prêt
-                    sh '''
-                    echo "Vérification de la disponibilité de SonarQube..."
-                    for i in {1..30}; do
-                        if curl -s http://sonarqube:9000/api/system/status | grep -q '"status":"UP"'; then
-                            echo "SonarQube est prêt!"
-                            break
-                        fi
-                        echo "Attente de SonarQube... ($i/30)"
-                        sleep 10
-                    done
-                    '''
-
                     sh """
                     ./mvnw sonar:sonar \
                         -Dsonar.host.url=${SONAR_HOST_URL} \
@@ -145,6 +165,9 @@ pipeline {
 
         success {
             echo '✅ PIPELINE RÉUSSI ! L\'image Docker est prête et les tests sont validés.'
+            echo '📊 Consultez les rapports:'
+            echo '   - JaCoCo: Jenkins → JaCoCo Coverage Report'
+            echo '   - SonarQube: http://localhost:9000'
         }
         failure {
             echo '❌ ÉCHEC DU PIPELINE. Vérifiez les logs Maven ou Docker.'
