@@ -9,8 +9,7 @@ pipeline {
         SPRING_DATASOURCE_PASSWORD = "admin_password"
         MAVEN_OPTS = "-Dorg.jenkinsci.plugins.durabletask.BourneShellScript.HEARTBEAT_CHECK_INTERVAL=300"
         SONAR_HOST_URL = "http://sonarqube:9000"
-        SONAR_LOGIN = "admin"
-        SONAR_PASSWORD = "admin123"
+        SONAR_TOKEN = credentials('sonarqube-token')
     }
 
     stages {
@@ -97,10 +96,9 @@ pipeline {
                     sh """
                     ./mvnw sonar:sonar \
                         -Dsonar.host.url=${SONAR_HOST_URL} \
-                        -Dsonar.login=${SONAR_LOGIN} \
-                        -Dsonar.password=${SONAR_PASSWORD} \
-                        -Dsonar.projectKey=SmartLogi-V2 \
-                        -Dsonar.projectName=SmartLogi-V2 \
+                        -Dsonar.token=${SONAR_TOKEN} \
+                        -Dsonar.projectKey=smartlogi-v2 \
+                        -Dsonar.projectName='SmartLogi-V2' \
                         -Dsonar.coverage.jacoco.xmlReportPaths=target/site/jacoco/jacoco.xml
                     """
                 }
