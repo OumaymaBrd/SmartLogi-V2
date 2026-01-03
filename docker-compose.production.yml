@@ -1,9 +1,4 @@
-# Docker Compose pour l'environnement de PRODUCTION
-# Ce fichier déploie uniquement l'application et sa base de données
-# Sans Jenkins et SonarQube pour optimiser les ressources
-
 services:
-  # --- Base de Données PostgreSQL pour l'application ---
   postgres-db:
     image: postgres:15
     container_name: smartlogi-postgres-prod
@@ -24,7 +19,6 @@ services:
       timeout: 5s
       retries: 5
 
-  # --- Application Backend ---
   app-backend:
     image: smartlogi-v2:latest
     container_name: smartlogi-app-prod

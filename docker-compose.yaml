@@ -1,5 +1,4 @@
 services:
-  # --- Base de Données PostgreSQL pour l'application ---
   postgres-db:
     image: postgres:15
     container_name: postgres-db
