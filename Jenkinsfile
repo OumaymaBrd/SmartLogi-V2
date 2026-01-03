@@ -72,6 +72,23 @@ pipeline {
                     else
                         echo "Le projet existe déjà dans SonarQube"
                     fi
+
+                    echo "Génération d'un token SonarQube pour l'analyse..."
+
+                    # Supprimer l'ancien token s'il existe
+                    curl -s -u admin:admin -X POST "http://sonarqube:9000/api/user_tokens/revoke" -d "name=jenkins-token" || true
+
+                    # Générer un nouveau token
+                    SONAR_TOKEN=$(curl -s -u admin:admin -X POST "http://sonarqube:9000/api/user_tokens/generate" \
+                        -d "name=jenkins-token" | grep -o '"token":"[^"]*"' | cut -d'"' -f4)
+
+                    if [ -z "$SONAR_TOKEN" ]; then
+                        echo "ERREUR: Impossible de générer le token SonarQube"
+                        exit 1
+                    fi
+
+                    echo "Token généré avec succès!"
+                    echo "$SONAR_TOKEN" > /tmp/sonar_token.txt
                     '''
                 }
             }
@@ -82,14 +99,18 @@ pipeline {
                 echo 'Analyse de la qualité du code avec SonarQube...'
                 script {
                     sh """
+                    SONAR_TOKEN=\$(cat /tmp/sonar_token.txt)
+
                     ./mvnw sonar:sonar \
                         -Dsonar.host.url=${SONAR_HOST_URL} \
-                        -Dsonar.login=admin \
-                        -Dsonar.password=admin \
+                        -Dsonar.token=\$SONAR_TOKEN \
                         -Dsonar.projectKey=smartlogi-v2 \
                         -Dsonar.projectName='SmartLogi-V2' \
                         -Dsonar.java.binaries=target/classes \
                         -Dsonar.coverage.jacoco.xmlReportPaths=target/site/jacoco/jacoco.xml
+
+                    # Nettoyer le token temporaire
+                    rm -f /tmp/sonar_token.txt
                     """
                 }
             }
