@@ -21,7 +21,7 @@
 
     <name>SmartSpring</name>
     <description>Système de gestion de livraison SmartLogi</description>
-
+<!-- -->
     <properties>
         <java.version>17</java.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
