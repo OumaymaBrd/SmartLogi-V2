@@ -1,9 +1,21 @@
 jenkins:
-  systemMessage: "Pipeline SmartLogi-V2 prêt"
+  systemMessage: "Pipeline SmartLogi-V2 prêt - Configuration automatique activée"
+
+  securityRealm:
+    local:
+      allowsSignup: false
+      users:
+        - id: "admin"
+          password: "admin"
+
+  authorizationStrategy:
+    loggedInUsersCanDoAnything:
+      allowAnonymousRead: false
 
 jobs:
   - script: >
       pipelineJob('SmartLogi-V2-Pipeline') {
+        description('Pipeline SmartLogi-V2 avec JaCoCo et SonarQube')
         definition {
           cpsScm {
             scm {
@@ -18,3 +30,10 @@ jobs:
           }
         }
       }
+
+unclassified:
+  sonarGlobalConfiguration:
+    installations:
+      - name: "SonarQube"
+        serverUrl: "http://sonarqube:9000"
+        credentialsId: "sonarqube-credentials"

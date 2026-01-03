@@ -19,30 +19,16 @@ pipeline {
             }
         }
 
-        stage('Tests Maven') {
+        stage('Build & Tests with Coverage') {
             steps {
-                echo 'Exécution des tests unitaires...'
+                echo 'Construction de l\'application et exécution des tests avec couverture...'
                 sh """
-                ./mvnw clean test \
+                ./mvnw clean test package \
                     -Dspring.datasource.url=${SPRING_DATASOURCE_URL} \
                     -Dspring.datasource.username=${SPRING_DATASOURCE_USERNAME} \
                     -Dspring.datasource.password=${SPRING_DATASOURCE_PASSWORD} \
                     -Dspring.jpa.hibernate.ddl-auto=create-drop
                 """
-            }
-        }
-
-        stage('Build Application') {
-            steps {
-                echo 'Construction de l\'application...'
-                sh './mvnw clean package -DskipTests'
-            }
-        }
-
-        stage('Code Coverage - JaCoCo') {
-            steps {
-                echo 'Génération du rapport de couverture de code JaCoCo...'
-                sh './mvnw jacoco:report'
                 echo 'Rapport JaCoCo généré dans target/site/jacoco/'
             }
             post {
@@ -102,6 +88,7 @@ pipeline {
                         -Dsonar.password=admin \
                         -Dsonar.projectKey=smartlogi-v2 \
                         -Dsonar.projectName='SmartLogi-V2' \
+                        -Dsonar.java.binaries=target/classes \
                         -Dsonar.coverage.jacoco.xmlReportPaths=target/site/jacoco/jacoco.xml
                     """
                 }
