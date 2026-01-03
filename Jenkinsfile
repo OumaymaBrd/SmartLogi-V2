@@ -9,6 +9,8 @@ pipeline {
         SPRING_DATASOURCE_PASSWORD = "admin_password"
         MAVEN_OPTS = "-Dorg.jenkinsci.plugins.durabletask.BourneShellScript.HEARTBEAT_CHECK_INTERVAL=300"
         SONAR_HOST_URL = "http://sonarqube:9000"
+        GIT_CREDENTIALS_ID = "github-credentials"
+        PRODUCTION_BRANCH = "product"
     }
 
     stages {
@@ -89,6 +91,81 @@ pipeline {
                 """
             }
         }
+
+        stage('Build Docker Image') {
+            when {
+                branch 'master'
+            }
+            steps {
+                echo 'Construction de l\'image Docker...'
+                script {
+                    sh """
+                    docker build -t smartlogi-v2:latest .
+                    docker tag smartlogi-v2:latest smartlogi-v2:\${BUILD_NUMBER}
+                    """
+                    echo "Image Docker créée: smartlogi-v2:latest et smartlogi-v2:\${BUILD_NUMBER}"
+                }
+            }
+        }
+
+        stage('Push to Production Branch') {
+            when {
+                branch 'master'
+            }
+            steps {
+                echo 'Push automatique vers la branche product...'
+                script {
+                    sh """
+                    # Configuration Git
+                    git config user.name "Jenkins CI"
+                    git config user.email "jenkins@smartlogi.com"
+
+                    # Création ou mise à jour de la branche product
+                    git checkout -B ${PRODUCTION_BRANCH}
+
+                    # Tag de version
+                    git tag -a v\${BUILD_NUMBER} -m "Version \${BUILD_NUMBER} - Build réussi"
+
+                    # Push vers GitHub
+                    git push origin ${PRODUCTION_BRANCH} --force
+                    git push origin v\${BUILD_NUMBER}
+
+                    echo "✓ Version \${BUILD_NUMBER} poussée vers ${PRODUCTION_BRANCH}"
+                    """
+                }
+            }
+        }
+
+        stage('Deploy to Production') {
+            when {
+                branch 'product'
+            }
+            steps {
+                echo 'Déploiement de l\'application en production...'
+                script {
+                    sh """
+                    echo "=== Déploiement de SmartLogi-V2 en production ==="
+
+                    # Arrêt des anciens conteneurs
+                    docker-compose -f docker-compose.production.yml down || true
+
+                    # Démarrage des nouveaux conteneurs
+                    docker-compose -f docker-compose.production.yml up -d
+
+                    # Vérification du déploiement
+                    echo "Attente du démarrage de l'application..."
+                    sleep 30
+
+                    if curl -f http://localhost:9089/actuator/health; then
+                        echo "✓ Application déployée avec succès!"
+                    else
+                        echo "✗ Échec du déploiement"
+                        exit 1
+                    fi
+                    """
+                }
+            }
+        }
     }
 
     post {
@@ -100,6 +177,16 @@ pipeline {
             echo '========================================='
             echo 'PIPELINE RÉUSSI !'
             echo '========================================='
+            script {
+                if (env.BRANCH_NAME == 'master') {
+                    echo '✓ Build réussi sur master'
+                    echo '✓ Version poussée vers product'
+                    echo '✓ Image Docker créée: smartlogi-v2:' + env.BUILD_NUMBER
+                } else if (env.BRANCH_NAME == 'product') {
+                    echo '✓ Déploiement réussi en production'
+                    echo '✓ Application accessible sur http://localhost:9089'
+                }
+            }
             echo 'Consultez les rapports:'
             echo '   - JaCoCo Coverage: Jenkins > Build > Coverage Report'
             echo '   - SonarQube: http://localhost:9000'

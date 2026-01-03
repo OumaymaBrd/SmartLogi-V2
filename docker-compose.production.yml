@@ -1,0 +1,61 @@
+# Docker Compose pour l'environnement de PRODUCTION
+# Ce fichier déploie uniquement l'application et sa base de données
+# Sans Jenkins et SonarQube pour optimiser les ressources
+
+services:
+  # --- Base de Données PostgreSQL pour l'application ---
+  postgres-db:
+    image: postgres:15
+    container_name: smartlogi-postgres-prod
+    restart: always
+    environment:
+      - POSTGRES_DB=smartSpring
+      - POSTGRES_USER=admin
+      - POSTGRES_PASSWORD=admin_password
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres-prod-data:/var/lib/postgresql/data
+    networks:
+      - smartlogi-prod-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U admin -d smartSpring"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # --- Application Backend ---
+  app-backend:
+    image: smartlogi-v2:latest
+    container_name: smartlogi-app-prod
+    ports:
+      - "9089:9089"
+    environment:
+      - SPRING_PROFILES_ACTIVE=prod
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres-db:5432/smartSpring
+      - SPRING_DATASOURCE_USERNAME=admin
+      - SPRING_DATASOURCE_PASSWORD=admin_password
+      - SPRING_JPA_HIBERNATE_DDL_AUTO=update
+      - GMAIL_USERNAME=oumaymabramid@gmail.com
+      - GMAIL_APP_PASSWORD=votre_mot_de_passe_google
+      - SERVER_PORT=9089
+    depends_on:
+      postgres-db:
+        condition: service_healthy
+    restart: always
+    networks:
+      - smartlogi-prod-network
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:9089/actuator/health || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+
+networks:
+  smartlogi-prod-network:
+    driver: bridge
+
+volumes:
+  postgres-prod-data:
+    driver: local
