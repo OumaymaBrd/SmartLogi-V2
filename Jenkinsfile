@@ -58,11 +58,11 @@ pipeline {
                         sleep 10
                     done
 
-                    PROJECT_EXISTS=$(curl -s -u admin:admin "http://sonarqube:9000/api/projects/search?projects=smartlogi-v2" | grep -c '"key":"smartlogi-v2"' || true)
+                    PROJECT_EXISTS=$(curl -s -u admin:P@ssWord123! "http://sonarqube:9000/api/projects/search?projects=smartlogi-v2" | grep -c '"key":"smartlogi-v2"' || true)
 
                     if [ "$PROJECT_EXISTS" -eq 0 ]; then
                         echo "Création du projet SmartLogi-V2 dans SonarQube..."
-                        curl -s -u admin:admin -X POST "http://sonarqube:9000/api/projects/create" \
+                        curl -s -u admin:P@ssWord123! -X POST "http://sonarqube:9000/api/projects/create" \
                             -d "project=smartlogi-v2" \
                             -d "name=SmartLogi-V2"
                         echo "Projet créé avec succès!"
@@ -81,7 +81,7 @@ pipeline {
                 ./mvnw sonar:sonar \
                     -Dsonar.host.url=${SONAR_HOST_URL} \
                     -Dsonar.login=admin \
-                    -Dsonar.password=admin \
+                    -Dsonar.password=P@ssWord123! \
                     -Dsonar.projectKey=smartlogi-v2 \
                     -Dsonar.projectName='SmartLogi-V2' \
                     -Dsonar.java.binaries=target/classes \
@@ -94,7 +94,6 @@ pipeline {
     post {
         always {
             echo 'Traitement des rapports de tests...'
-            junit testResults: '**/target/surefire-reports/*.xml', allowEmptyResults: true
         }
 
         success {
@@ -105,7 +104,7 @@ pipeline {
             echo '   - JaCoCo Coverage: Jenkins > Build > Coverage Report'
             echo '   - SonarQube: http://localhost:9000'
             echo '   - Projet SonarQube: smartlogi-v2'
-            echo '   - Identifiants SonarQube: admin/admin'
+            echo '   - Identifiants SonarQube: admin/P@ssWord123!'
             echo '========================================='
         }
         failure {
