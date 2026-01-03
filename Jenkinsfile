@@ -78,12 +78,15 @@ pipeline {
                     # Supprimer l'ancien token s'il existe
                     curl -s -u admin:admin -X POST "http://sonarqube:9000/api/user_tokens/revoke" -d "name=jenkins-token" || true
 
-                    # Générer un nouveau token
-                    SONAR_TOKEN=$(curl -s -u admin:admin -X POST "http://sonarqube:9000/api/user_tokens/generate" \
-                        -d "name=jenkins-token" | grep -o '"token":"[^"]*"' | cut -d'"' -f4)
+                    # Générer un nouveau token et l'extraire correctement
+                    RESPONSE=$(curl -s -u admin:admin -X POST "http://sonarqube:9000/api/user_tokens/generate" -d "name=jenkins-token")
+                    echo "Réponse de l'API: $RESPONSE"
+
+                    SONAR_TOKEN=$(echo "$RESPONSE" | sed -n 's/.*"token":"$$[^"]*$$".*/\1/p')
 
                     if [ -z "$SONAR_TOKEN" ]; then
                         echo "ERREUR: Impossible de générer le token SonarQube"
+                        echo "Réponse complète: $RESPONSE"
                         exit 1
                     fi
 
