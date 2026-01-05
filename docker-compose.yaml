@@ -19,7 +19,6 @@ services:
       timeout: 5s
       retries: 5
 
-  # --- Base de Données PostgreSQL pour SonarQube ---
   sonarqube-db:
     image: postgres:15
     container_name: sonarqube-db
@@ -38,7 +37,6 @@ services:
       timeout: 5s
       retries: 5
 
-  # --- SonarQube ---
   sonarqube:
     image: sonarqube:10.3-community
     container_name: sonarqube
@@ -49,8 +47,6 @@ services:
       - SONAR_JDBC_URL=jdbc:postgresql://sonarqube-db:5432/sonarqube
       - SONAR_JDBC_USERNAME=sonar
       - SONAR_JDBC_PASSWORD=sonar_password
-      - SONAR_WEB_JAVAOPTS=-Xmx512m -Xms128m
-      - SONAR_CE_JAVAOPTS=-Xmx512m -Xms128m
     volumes:
       - sonarqube-data:/opt/sonarqube/data
       - sonarqube-logs:/opt/sonarqube/logs
@@ -66,12 +62,7 @@ services:
       timeout: 10s
       retries: 15
       start_period: 120s
-    ulimits:
-      nofile:
-        soft: 65536
-        hard: 65536
 
-  # --- Application Backend ---
   app-backend:
     build: .
     container_name: smart-spring-app
@@ -82,8 +73,6 @@ services:
       - SPRING_DATASOURCE_USERNAME=admin
       - SPRING_DATASOURCE_PASSWORD=admin_password
       - SPRING_JPA_HIBERNATE_DDL_AUTO=update
-      - GMAIL_USERNAME=oumaymabramid@gmail.com
-      - GMAIL_APP_PASSWORD=votre_mot_de_passe_google
     depends_on:
       postgres-db:
         condition: service_healthy
@@ -91,17 +80,17 @@ services:
     networks:
       - smart-network
 
-  # --- Jenkins ---
   jenkins:
     image: jenkins/jenkins:lts-jdk17
     container_name: jenkins
-    user: root
+    user: root # Nécessaire pour installer des paquets système
     ports:
       - "8080:8080"
       - "50000:50000"
     volumes:
       - jenkins-data:/var/jenkins_home
       - ./jenkins-config:/var/jenkins_config:ro
+      - /var/run/docker.sock:/var/run/docker.sock # Accès au Docker hôte
     environment:
       - CASC_JENKINS_CONFIG=/var/jenkins_config/jenkins.yaml
       - JAVA_OPTS=-Djenkins.install.runSetupWizard=false -Dorg.jenkinsci.plugins.durabletask.BourneShellScript.HEARTBEAT_CHECK_INTERVAL=300
@@ -109,11 +98,15 @@ services:
     command:
       - -c
       - |
+        echo "=== Installation Docker et Docker Compose ==="
+        apt-get update && apt-get install -y docker.io docker-compose # Correction exit 127
+        
         echo "=== Installation des plugins Jenkins ==="
         if [ -f /var/jenkins_config/plugins.txt ]; then
-          jenkins-plugin-cli --plugin-file /var/jenkins_config/plugins.txt || echo "Avertissement: certains plugins n'ont pas pu être installés"
+          jenkins-plugin-cli --plugin-file /var/jenkins_config/plugins.txt
         fi
-        echo "=== Démarrage de Jenkins avec configuration automatique ==="
+        
+        echo "=== Démarrage de Jenkins ==="
         exec /usr/local/bin/jenkins.sh
     networks:
       - smart-network
