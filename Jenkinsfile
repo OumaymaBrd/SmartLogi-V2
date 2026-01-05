@@ -93,48 +93,36 @@ pipeline {
         }
 
         stage('Build Docker Image') {
-            when {
-                branch 'master'
-            }
-            steps {
-                echo 'Construction de l\'image Docker...'
-                script {
-                    sh """
-                    docker build -t smartlogi-v2:latest .
-                    docker tag smartlogi-v2:latest smartlogi-v2:\${BUILD_NUMBER}
-                    """
-                    echo "Image Docker créée: smartlogi-v2:latest et smartlogi-v2:\${BUILD_NUMBER}"
+                    steps {
+                        echo 'Construction de l\'image Docker...'
+                        script {
+                            sh """
+                            docker build -t smartlogi-v2:latest .
+                            docker tag smartlogi-v2:latest smartlogi-v2:${env.BUILD_NUMBER}
+                            """
+                            echo "✓ Image Docker créée: smartlogi-v2:latest et smartlogi-v2:${env.BUILD_NUMBER}"
+                        }
+                    }
                 }
-            }
-        }
 
         stage('Push to Production Branch') {
-            when {
-                branch 'master'
-            }
-            steps {
-                echo 'Push automatique vers la branche product...'
-                script {
-                    sh """
-                    # Configuration Git
-                    git config user.name "Jenkins CI"
-                    git config user.email "jenkins@smartlogi.com"
-
-                    # Création ou mise à jour de la branche product
-                    git checkout -B ${PRODUCTION_BRANCH}
-
-                    # Tag de version
-                    git tag -a v\${BUILD_NUMBER} -m "Version \${BUILD_NUMBER} - Build réussi"
-
-                    # Push vers GitHub
-                    git push origin ${PRODUCTION_BRANCH} --force
-                    git push origin v\${BUILD_NUMBER}
-
-                    echo "✓ Version \${BUILD_NUMBER} poussée vers ${PRODUCTION_BRANCH}"
-                    """
+                    when {
+                        branch 'master'
+                    }
+                    steps {
+                        echo 'Push automatique vers la branche product...'
+                        script {
+                            sh """
+                            git config user.name "Jenkins CI"
+                            git config user.email "jenkins@smartlogi.com"
+                            git checkout -B ${PRODUCTION_BRANCH}
+                            git tag -a v${env.BUILD_NUMBER} -m "Version ${env.BUILD_NUMBER} - Build réussi"
+                            git push origin ${PRODUCTION_BRANCH} --force
+                            git push origin v${env.BUILD_NUMBER}
+                            """
+                        }
+                    }
                 }
-            }
-        }
 
         stage('Deploy to Production') {
             when {
