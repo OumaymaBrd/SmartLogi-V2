@@ -7,6 +7,7 @@ pipeline {
         SPRING_DATASOURCE_PASSWORD = "admin_password"
         SONAR_HOST_URL = "http://sonarqube:9000"
         PRODUCTION_BRANCH = "product"
+        // Configuration Docker Hub
         DOCKER_HUB_REPO = "oumaymabramid/smartlogi-v2"
         DOCKER_CREDENTIALS_ID = "docker-hub-credentials"
     }
@@ -52,13 +53,10 @@ pipeline {
         stage('Build & Push Docker Image') {
             steps {
                 script {
-                    echo "Construction de l'image Docker : ${DOCKER_HUB_REPO}"
-                    // Build de l'image
+                    echo "Construction et Push de l'image Docker..."
                     sh "docker build -t ${DOCKER_HUB_REPO}:latest ."
                     sh "docker tag ${DOCKER_HUB_REPO}:latest ${DOCKER_HUB_REPO}:${env.BUILD_NUMBER}"
 
-                    echo "Connexion et Push vers Docker Hub..."
-                    // Utilisation des credentials créés dans Jenkins
                     withCredentials([usernamePassword(credentialsId: env.DOCKER_CREDENTIALS_ID, usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASS')]) {
                         sh "echo \$DOCKER_PASS | docker login -u \$DOCKER_USER --password-stdin"
                         sh "docker push ${DOCKER_HUB_REPO}:latest"
@@ -72,6 +70,7 @@ pipeline {
             when { branch 'master' }
             steps {
                 script {
+                    echo "Mise à jour de la branche ${PRODUCTION_BRANCH}..."
                     sh """
                     git config user.name "Jenkins CI"
                     git config user.email "jenkins@smartlogi.com"
@@ -83,10 +82,9 @@ pipeline {
         }
 
         stage('Deploy to Production') {
-            when { branch 'product' }
             steps {
                 script {
-                    echo "Déploiement de la version ${DOCKER_HUB_REPO}:latest"
+                    echo "Déploiement immédiat de la version ${DOCKER_HUB_REPO}:latest"
                     sh "docker pull ${DOCKER_HUB_REPO}:latest"
                     sh "docker-compose -f docker-compose.production.yml down || true"
                     sh "docker-compose -f docker-compose.production.yml up -d"
