@@ -7,6 +7,8 @@ pipeline {
         SPRING_DATASOURCE_PASSWORD = "admin_password"
         SONAR_HOST_URL = "http://sonarqube:9000"
         PRODUCTION_BRANCH = "product"
+        DOCKER_HUB_REPO = "oumaymabramid/smartlogi-v2"
+        DOCKER_CREDENTIALS_ID = "docker-hub-credentials"
     }
 
     stages {
@@ -47,12 +49,21 @@ pipeline {
             }
         }
 
-        stage('Build Docker Image') {
+        stage('Build & Push Docker Image') {
             steps {
-                echo 'Construction de l\'image Docker...'
                 script {
-                    sh "docker build -t smartlogi-v2:latest ."
-                    sh "docker tag smartlogi-v2:latest smartlogi-v2:${env.BUILD_NUMBER}"
+                    echo "Construction de l'image Docker : ${DOCKER_HUB_REPO}"
+                    // Build de l'image
+                    sh "docker build -t ${DOCKER_HUB_REPO}:latest ."
+                    sh "docker tag ${DOCKER_HUB_REPO}:latest ${DOCKER_HUB_REPO}:${env.BUILD_NUMBER}"
+
+                    echo "Connexion et Push vers Docker Hub..."
+                    // Utilisation des credentials créés dans Jenkins
+                    withCredentials([usernamePassword(credentialsId: env.DOCKER_CREDENTIALS_ID, usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASS')]) {
+                        sh "echo \$DOCKER_PASS | docker login -u \$DOCKER_USER --password-stdin"
+                        sh "docker push ${DOCKER_HUB_REPO}:latest"
+                        sh "docker push ${DOCKER_HUB_REPO}:${env.BUILD_NUMBER}"
+                    }
                 }
             }
         }
@@ -74,8 +85,12 @@ pipeline {
         stage('Deploy to Production') {
             when { branch 'product' }
             steps {
-                sh "docker-compose -f docker-compose.production.yml down || true"
-                sh "docker-compose -f docker-compose.production.yml up -d"
+                script {
+                    echo "Déploiement de la version ${DOCKER_HUB_REPO}:latest"
+                    sh "docker pull ${DOCKER_HUB_REPO}:latest"
+                    sh "docker-compose -f docker-compose.production.yml down || true"
+                    sh "docker-compose -f docker-compose.production.yml up -d"
+                }
             }
         }
     }
