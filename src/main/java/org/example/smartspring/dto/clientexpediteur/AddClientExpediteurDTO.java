@@ -20,6 +20,9 @@ public class AddClientExpediteurDTO {
     @Size(min = 2, max = 100, message = "Le prénom doit contenir entre 2 et 100 caractères")
     private String prenom;
 
+    @NotBlank(message = "La ville est obligatoire")
+    private String ville;
+
     @NotBlank(message = "L'email est obligatoire")
     @Email(message = "Format d'email invalide")
     private String email;

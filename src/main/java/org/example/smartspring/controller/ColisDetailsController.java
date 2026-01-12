@@ -24,6 +24,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/detailsColis")
+@CrossOrigin(origins = "http://localhost:4200")
 @RequiredArgsConstructor
 public class ColisDetailsController {
     private final ColisDetailsService service;
@@ -37,7 +38,7 @@ public class ColisDetailsController {
             @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss") LocalDateTime dateCreation,
             @RequestParam(required = false) String ville_destination,
             @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "2") int size
+            @RequestParam(defaultValue = "5") int size
     ) {
         Pageable pageable = PageRequest.of(page, size);
         Page<ColisDetailsDTO> pageResult = service.getAll(
